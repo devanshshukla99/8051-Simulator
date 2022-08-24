@@ -1,0 +1,5 @@
+Flask>=2.0.2
+pytest>=7.0.1
+rich>=11.2.0
+setuptools>=52.0.0.post20210125
+gunicorn>=20.1.0
