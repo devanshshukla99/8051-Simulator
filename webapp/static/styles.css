@@ -1,0 +1,140 @@
+* {
+    margin: 0px;
+    padding: 0px;
+    color: rgb(229, 229, 229);
+}
+
+.main {
+    margin-left: 1rem;
+    margin-top: 1rem;
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 10px;
+    grid-auto-rows: 100px;
+    grid-template-areas:
+        "a d d d d f"
+        "a d d d d c"
+        "b d d d d c"
+        "b e e e e c";
+    /* grid-template-columns: 100px 80px 100px; */
+    grid-template-columns: auto auto auto auto;
+    grid-template-rows: 80px auto 80px;
+    column-gap: 10px;
+    row-gap: 15px;
+}
+
+table {
+    text-align: center
+}
+
+.memory-container {
+    padding: 1rem;
+    text-align: center;
+    height: 80vh;
+    width: 250px;
+    overflow-y: auto;
+    border-collapse: collapse;
+}
+
+.registers-flags {
+    display: flex;
+    padding: 1rem;
+    flex-direction: column;
+}
+
+.code-container {
+    display: flex;
+    flex-direction: row;
+    border: solid rgb(159, 159, 159) 1px;
+    border-radius: 6px;
+}
+
+.controls-container {
+    display: flex;
+    flex-direction: column;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    min-height: 250px;
+}
+
+.controls-container .button-head {
+    padding: 1rem;
+}
+
+#track {
+    width: 10%;
+    resize: none;
+    align-content: right;
+    border: none;
+    border-right: solid rgba(42, 115, 188, 0.826) 2px;
+}
+
+@media only screen and (min-width: 1080px) {
+    #track {
+        width: 5%;
+    }
+}
+
+.code-box {
+    outline: 0px;
+    white-space: break-spaces;
+    min-height: 600px;
+    resize: none;
+    width: 100%;
+    border: none;
+}
+
+textarea {
+    margin-top: 0.5rem;
+    padding: 0.5rem;
+    resize: none;
+}
+
+textarea:focus-visible {
+    outline: 0px;
+}
+
+.memory-edit-container {
+    display: flex;
+    height: 10%;
+    justify-content: left;
+    padding-left: 1rem;
+}
+
+.memory-edit {
+    padding: 1rem;
+    border-radius: 50px;
+    border: 1px solid aqua !important;
+}
+
+.memory-edit-container input:focus {
+    outline: none;
+}
+
+::-webkit-scrollbar {
+    width: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+    border-radius: 10px;
+    background-color: rgb(0, 0, 0, 0.3);
+}
+
+.header {
+    padding-left: 1rem;
+    padding-top: 1rem;
+    display: flex;
+    justify-content: flex-start;
+}
+
+.header a {
+    color: #777;
+    margin-top: -0.3em;
+    display: block;
+    text-decoration: none;
+}
+
+.header a:hover {
+    color: rgb(10, 96, 255);
+    text-decoration: none;
+}
