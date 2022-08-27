@@ -3,6 +3,7 @@ import textwrap
 
 from core.flags import flags
 from core.basic_memory import Byte
+from core.util import get_byte_sequence
 from core.exceptions import InvalidMemoryAddress, MemoryLimitExceeded
 
 """
@@ -210,26 +211,148 @@ class ProgramCounter(Byte):
 
 class SuperMemory:
     def __init__(self) -> None:
-        self.memory_rom = Memory(4096, "0x000")
+        self.memory_rom = Memory(4096, "0x0000")
         self.memory_ram = Memory(128, "0x00")
 
         self.A = Byte()
         self.B = Byte()
         self.SP = StackPointer(self.memory_ram, "0x07", _bytes=1)
         self.PC = ProgramCounter(self.memory_rom)
+        self.DPTR = RegisterPair("DPL", "DPH")
+        self._define_general_purpose_registers()
 
     def __repr__(self) -> str:
         return "<SuperMemory>"
+
+    def _define_general_purpose_registers(self):
+        self._general_purpose_registers = {
+            "00": {f"R{i}": self.memory_ram[x] for i, x in enumerate(get_byte_sequence("0x00", 8))},
+            "01": {f"R{i}": self.memory_ram[x] for i, x in enumerate(get_byte_sequence("0x08", 8))},
+            "10": {f"R{i}": self.memory_ram[x] for i, x in enumerate(get_byte_sequence("0x10", 8))},
+            "11": {f"R{i}": self.memory_ram[x] for i, x in enumerate(get_byte_sequence("0x18", 8))},
+        }
+        setattr(
+            self.R0.__func__,
+            "read",
+            lambda: self._general_purpose_registers.get("".join([str(int(flags.RS1)), str(int(flags.RS0))])).get("R0"),
+        )
+        setattr(
+            self.R1.__func__,
+            "read",
+            lambda: self._general_purpose_registers.get("".join([str(int(flags.RS1)), str(int(flags.RS0))])).get("R1"),
+        )
+        setattr(
+            self.R2.__func__,
+            "read",
+            lambda: self._general_purpose_registers.get("".join([str(int(flags.RS1)), str(int(flags.RS0))])).get("R2"),
+        )
+        setattr(
+            self.R3.__func__,
+            "read",
+            lambda: self._general_purpose_registers.get("".join([str(int(flags.RS1)), str(int(flags.RS0))])).get("R3"),
+        )
+        setattr(
+            self.R4.__func__,
+            "read",
+            lambda: self._general_purpose_registers.get("".join([str(int(flags.RS1)), str(int(flags.RS0))])).get("R4"),
+        )
+        setattr(
+            self.R5.__func__,
+            "read",
+            lambda: self._general_purpose_registers.get("".join([str(int(flags.RS1)), str(int(flags.RS0))])).get("R5"),
+        )
+        setattr(
+            self.R6.__func__,
+            "read",
+            lambda: self._general_purpose_registers.get("".join([str(int(flags.RS1)), str(int(flags.RS0))])).get("R6"),
+        )
+        setattr(
+            self.R7.__func__,
+            "read",
+            lambda: self._general_purpose_registers.get("".join([str(int(flags.RS1)), str(int(flags.RS0))])).get("R7"),
+        )
+
+        setattr(
+            self.R0.__func__,
+            "write",
+            lambda data, *args: self._general_purpose_registers.get("".join([str(int(flags.RS1)), str(int(flags.RS0))]))
+            .__getitem__("R0")
+            .update(data),
+        )
+        setattr(
+            self.R1.__func__,
+            "write",
+            lambda data, *args: self._general_purpose_registers.get("".join([str(int(flags.RS1)), str(int(flags.RS0))]))
+            .__getitem__("R1")
+            .update(data),
+        )
+        setattr(
+            self.R2.__func__,
+            "write",
+            lambda data, *args: self._general_purpose_registers.get("".join([str(int(flags.RS1)), str(int(flags.RS0))]))
+            .__getitem__("R2")
+            .update(data),
+        )
+        setattr(
+            self.R3.__func__,
+            "write",
+            lambda data, *args: self._general_purpose_registers.get("".join([str(int(flags.RS1)), str(int(flags.RS0))]))
+            .__getitem__("R3")
+            .update(data),
+        )
+        setattr(
+            self.R4.__func__,
+            "write",
+            lambda data, *args: self._general_purpose_registers.get("".join([str(int(flags.RS1)), str(int(flags.RS0))]))
+            .__getitem__("R4")
+            .update(data),
+        )
+        setattr(
+            self.R5.__func__,
+            "write",
+            lambda data, *args: self._general_purpose_registers.get("".join([str(int(flags.RS1)), str(int(flags.RS0))]))
+            .__getitem__("R5")
+            .update(data),
+        )
+        setattr(
+            self.R6.__func__,
+            "write",
+            lambda data, *args: self._general_purpose_registers.get("".join([str(int(flags.RS1)), str(int(flags.RS0))]))
+            .__getitem__("R6")
+            .update(data),
+        )
+        setattr(
+            self.R7.__func__,
+            "write",
+            lambda data, *args: self._general_purpose_registers.get("".join([str(int(flags.RS1)), str(int(flags.RS0))]))
+            .__getitem__("R7")
+            .update(data),
+        )
 
     def _reg_inspect(self):
         return textwrap.dedent(
             f"""
             Registers
             ---------
-            A/PSW = {self.A} {flags.PSW}
-            B = {self.B}
-            SP = {self.SP}
-            PC = {self.PC}
+            A/PSW \t= {self.A} {flags.PSW}
+            B \t= {self.B}
+            SP \t= {self.SP}
+            PC \t= {self.PC}
+            DPTR \t= {self.DPTR},
+
+            Registers Bank
+            --------------
+            00 \t 01 \t 10 \t 11
+            -- \t -- \t -- \t --
+            {self._general_purpose_registers["00"]["R0"]} \t {self._general_purpose_registers["01"]["R0"]} \t {self._general_purpose_registers["10"]["R0"]} \t {self._general_purpose_registers["11"]["R0"]}
+            {self._general_purpose_registers["00"]["R1"]} \t {self._general_purpose_registers["01"]["R1"]} \t {self._general_purpose_registers["10"]["R1"]} \t {self._general_purpose_registers["11"]["R1"]}
+            {self._general_purpose_registers["00"]["R2"]} \t {self._general_purpose_registers["01"]["R2"]} \t {self._general_purpose_registers["10"]["R2"]} \t {self._general_purpose_registers["11"]["R2"]}
+            {self._general_purpose_registers["00"]["R3"]} \t {self._general_purpose_registers["01"]["R3"]} \t {self._general_purpose_registers["10"]["R3"]} \t {self._general_purpose_registers["11"]["R3"]}
+            {self._general_purpose_registers["00"]["R4"]} \t {self._general_purpose_registers["01"]["R4"]} \t {self._general_purpose_registers["10"]["R4"]} \t {self._general_purpose_registers["11"]["R4"]}
+            {self._general_purpose_registers["00"]["R5"]} \t {self._general_purpose_registers["01"]["R5"]} \t {self._general_purpose_registers["10"]["R5"]} \t {self._general_purpose_registers["11"]["R5"]}
+            {self._general_purpose_registers["00"]["R6"]} \t {self._general_purpose_registers["01"]["R6"]} \t {self._general_purpose_registers["10"]["R6"]} \t {self._general_purpose_registers["11"]["R6"]}
+            {self._general_purpose_registers["00"]["R7"]} \t {self._general_purpose_registers["01"]["R7"]} \t {self._general_purpose_registers["10"]["R7"]} \t {self._general_purpose_registers["11"]["R7"]}
+
             """
         )
 
@@ -239,9 +362,36 @@ class SuperMemory:
             "B": f"{self.B}",
             "SP": f"{self.SP}",
             "PC": f"{self.PC}",
+            "DPTR": f"{self.DPTR}",
         }
 
+    def R0(self):
+        pass
+
+    def R1(self):
+        pass
+
+    def R2(self):
+        pass
+
+    def R3(self):
+        pass
+
+    def R4(self):
+        pass
+
+    def R5(self):
+        pass
+
+    def R6(self):
+        pass
+
+    def R7(self):
+        pass
+
     def inspect(self):
-        return "\n\n".join([self._reg_inspect(), str(self.memory.sort())])
+        return "\n\n".join(
+            [self._reg_inspect(), "\nRAM", str(self.memory_ram.sort()), "\nROM", str(self.memory_rom.sort())]
+        )
 
     pass
