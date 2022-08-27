@@ -1,6 +1,8 @@
 import re
 import textwrap
 
+from core.flags import flags
+from core.basic_memory import Byte
 from core.exceptions import InvalidMemoryAddress, MemoryLimitExceeded
 
 """
@@ -14,110 +16,18 @@ from core.exceptions import InvalidMemoryAddress, MemoryLimitExceeded
 """
 
 
-class Hex:
-    def __init__(self, data: str = "0x00", _bytes: str = 1, *args, **kwargs) -> None:
-        self._bytes = _bytes
-        self._base = 16
-        self._format_spec = f"#0{2 + _bytes * 2}x"
-        self._format_spec_bin = f"#0{2 + _bytes * 8}b"
-        self._memory_limit_hex = "FF" * _bytes
-        self._memory_limit = int(self._memory_limit_hex, self._base)
-        self.data = data
-        return
-
-    def __call__(self, value: str) -> None:
-        self.data = value
-
-    def __str__(self) -> str:
-        return self._data
-
-    def __repr__(self) -> str:
-        return self._data
-
-    def __int__(self) -> int:
-        return int(self._data, self._base)
-
-    def __index__(self) -> int:
-        return int(self._data, self._base)
-
-    def __format__(self, format_spec: str = None) -> str:
-        if not format_spec:
-            format_spec = self._format_spec
-        return format(int(self._data, self._base), format_spec)
-
-    def __next__(self):
-        self._data = format(int(self._data, self._base) + 1, self._format_spec)
-        return self._data
-
-    def __add__(self, val: int):
-        return Hex(format(int(self._data, self._base) + val, self._format_spec), _bytes=self._bytes)
-
-    def __sub__(self, val: int):
-        return Hex(format(int(self._data, self._base) - val, self._format_spec), _bytes=self._bytes)
-
-    def __len__(self):
-        return self._bytes
-
-    def _verify(self, value: str):
-        if not re.fullmatch("^0[x|X][0-9a-fA-F]+", str(value)):
-            raise InvalidMemoryAddress()
-        if int(str(value), self._base) > self._memory_limit:
-            raise MemoryLimitExceeded()
-
-    def bin(self) -> str:
-        return format(int(self._data, self._base), self._format_spec_bin)
-
-    @property
-    def data(self) -> str:
-        return self._data
-
-    @data.setter
-    def data(self, val: str) -> None:
-        self._verify(val)
-        self._data = format(int(str(val), self._base), self._format_spec)
-        return
-
-    def read(self, *args, **kwargs) -> str:
-        return self
-
-    def write(self, val: str, *args, **kwargs) -> bool:
-        self.data = val
-        return True
-
-    def update(self, val: str, *args, **kwargs) -> bool:
-        return self.write(val, *args, **kwargs)
-
-    def replace(self, *args, **kwargs) -> None:
-        return self._data.replace(*args, **kwargs)
-
-    def lower(self, *args, **kwargs):
-        return self._data.lower(*args, **kwargs)
-
-    def upper(self, *args, **kwargs):
-        return self._data.upper(*args, **kwargs)
-
-    pass
-
-
-class Byte(Hex):
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
-
-    pass
-
-
 class Memory(dict):
-    def __init__(self, memory_size=65535, starting_address="0x0000", _bytes=2, *args, **kwargs) -> None:
+    def __init__(self, memory_size=65536, starting_address="0x0000", _bytes=2, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self._bytes = 1
         self._base = 16
-        self._memory_size = memory_size
+        self._memory_size = memory_size - 1
         self._starting_address = starting_address
 
         self._default_mem = "0x00"
         self._format_spec = f"#0{2 + _bytes * 2}x"
         self._format_spec_bin = f"#0{2 + _bytes * 4}b"
-        self._memory_limit = int(starting_address, 16) + memory_size
+        self._memory_limit = int(starting_address, 16) + self._memory_size
         self._memory_limit_hex = format(self._memory_limit, self._format_spec)
         return
 
@@ -300,28 +210,23 @@ class ProgramCounter(Byte):
 
 class SuperMemory:
     def __init__(self) -> None:
-        self.memory_rom = Memory(4095, "0x000")
-        self.memory_ram = Memory(127, "0x00")
+        self.memory_rom = Memory(4096, "0x000")
+        self.memory_ram = Memory(128, "0x00")
 
         self.A = Byte()
-        self.PSW = Byte()
+        self.B = Byte()
         self.SP = StackPointer(self.memory_ram, "0x07", _bytes=1)
         self.PC = ProgramCounter(self.memory_rom)
-        # setattr(self.M.__func__, "read", lambda *args: self.memory[self.HL.read_pair()])
-        # setattr(self.M.__func__, "write", lambda data, *args: self.memory.write(self.HL.read_pair(), data))
 
     def __repr__(self) -> str:
         return "<SuperMemory>"
-
-    # def M(self):
-    #     return
 
     def _reg_inspect(self):
         return textwrap.dedent(
             f"""
             Registers
             ---------
-            A/PSW = {self.A} {self.PSW}
+            A/PSW = {self.A} {flags.PSW}
             B = {self.B}
             SP = {self.SP}
             PC = {self.PC}
@@ -330,7 +235,7 @@ class SuperMemory:
 
     def _registers_todict(self):
         return {
-            "A/PSW": f"{self.A} {self.PSW}",
+            "A/PSW": f"{self.A} {flags.PSW}",
             "B": f"{self.B}",
             "SP": f"{self.SP}",
             "PC": f"{self.PC}",
