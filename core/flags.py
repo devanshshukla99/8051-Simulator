@@ -1,6 +1,6 @@
 import textwrap
 
-from core.memory import Hex
+from core.basic_memory import Hex
 
 
 class JumpFlag:
@@ -79,14 +79,14 @@ class Flags:
             f"""
             Flags
             -----
-            "P": {self.P}
-            "_UD": {self._UD}
-            "OV": {self.OV}
-            "RS0": {self.RS0}
-            "RS1": {self.RS1}
-            "F0": {self.F0}
-            "AC": {self.AC}
-            "CY": {self.CY}
+            "P" \t: {self.P}
+            "_UD" \t: {self._UD}
+            "OV" \t: {self.OV}
+            "RS0" \t: {self.RS0}
+            "RS1" \t: {self.RS1}
+            "F0" \t: {self.F0}
+            "AC" \t: {self.AC}
+            "CY" \t: {self.CY}
             """
         )
 
