@@ -9,17 +9,17 @@
     margin-top: 1rem;
     display: grid;
     grid-template-columns: repeat(8, 1fr);
-    gap: 10px;
+    gap: 8px;
     grid-auto-rows: 100px;
     grid-template-areas:
-        "a d d d d f"
-        "a d d d d c"
-        "b d d d d c"
-        "b e e e e c";
+        "a d d d f f f f"
+        "a d d d c c c c"
+        "b d d d c c c c"
+        "b e e e c c c c";
     /* grid-template-columns: 100px 80px 100px; */
     grid-template-columns: auto auto auto auto;
-    grid-template-rows: 80px auto 80px;
-    column-gap: 10px;
+    grid-template-rows: 60px auto 60px;
+    column-gap: 5px;
     row-gap: 15px;
 }
 
@@ -31,8 +31,8 @@ table {
     padding: 1rem;
     text-align: center;
     height: 80vh;
-    width: 250px;
-    overflow-y: auto;
+    width: 100%;
+    overflow-x: auto;
     border-collapse: collapse;
 }
 

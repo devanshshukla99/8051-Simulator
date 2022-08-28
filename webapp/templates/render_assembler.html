@@ -1,0 +1,15 @@
+{% if assembler %}
+<div class="assembler rounded p-1 px-4">
+    <h5>Assembler Output</h5>
+    <table class="table table-striped table-hover table-dark">
+        <tbody>
+            {% for key, value in assembler.items() %}
+            <tr>
+                <td> {{ key }} </td>
+                <td> {{ value }} </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}

@@ -1,0 +1,42 @@
+<div class="table-container" style="overflow-x: auto;">
+    <table class="table table-striped table-hover table-dark" style="font-size: 10px;">
+        <caption>RAM</caption>
+        <tbody>
+            <td></td>
+            {% for x in ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F"] %}
+                <th scope="col">{{ x }}</th>
+            {% endfor %}
+            {% for ramval in ram %}
+                    <tr>
+                        <th scope="row">
+                            {{ ramval[0][0][:-1] }}
+                        </th>
+                    {% for key, value in ramval %}
+                        <td>{{ (value|string)[2:] }}</td>
+                    {% endfor %}
+                    </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <!-- <table class="table table-striped table-hover table-dark" style="font-size: 9x;">
+        <caption>ROM</caption>
+        <tbody>
+            <td></td>
+            {% for x in ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F"] %}
+                <th scope="col">{{ x }}</th>
+            {% endfor %}
+            {% if rom %}
+                {% for romval in rom %}
+                        <tr>
+                            <th scope="row">
+                                {{ ramval[0][0][:-1] }}
+                            </th>
+                        {% for key, value in romval %}
+                            <td>{{ value }}</td>
+                        {% endfor %}
+                        </tr>
+                {% endfor %}
+            {% endif %}
+        </tbody>
+    </table> -->
+</div>

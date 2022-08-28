@@ -10,15 +10,32 @@ app = Flask(__name__, static_folder="static")
 controller = Controller()
 
 
+def _get_ram_and_rom():
+    _memory_ram, _memory_rom = None, None
+    _ram = controller.op.memory_ram.sort()
+    if _ram:
+        _ram = list(_ram.items())
+        _memory_ram = [_ram[x : x + 16] for x in range(0, len(_ram), 16)]
+
+    _rom = controller.op.memory_rom.sort()
+    if _rom:
+        _rom = list(_rom.items())
+        _memory_rom = [_rom[x : x + 16] for x in range(0, len(_rom), 16)]
+
+    print(f"RAM:{_memory_ram}; ROM:{_memory_rom}")
+    return _memory_ram, _memory_rom
+
+
 @app.route("/reset", methods=["POST"])
 def reset():
     global controller
     controller.reset()
+    ram, rom = _get_ram_and_rom()
     return {
         "registers_flags": render_template(
             "render_registers_flags.html", registers=controller.op.super_memory._registers_todict(), flags=flags
         ),
-        "memory": render_template("render_memory.html", memory=controller.op.memory),
+        "memory": render_template("render_memory.html", ram=ram, rom=rom),
         "assembler": render_template("render_assembler.html", assembler=controller.op._assembler),
     }
 
@@ -35,7 +52,9 @@ def assemble():
             try:
                 controller.set_flags(_flags)
                 controller.parse_all(_commands)
-                return render_template("render_memory.html", memory=controller.op.memory)
+                ram, rom = _get_ram_and_rom()
+                print("PASSED")
+                return render_template("render_memory.html", ram=ram, rom=rom)
             except Exception as e:
                 print(e)
                 return make_response(f"Exception raised {e}", 400)
@@ -49,11 +68,13 @@ def run():
     if controller.ready:
         try:
             controller.run()
+            ram, rom = _get_ram_and_rom()
+            print(f"{controller.inspect}")
             return {
                 "registers_flags": render_template(
                     "render_registers_flags.html", registers=controller.op.super_memory._registers_todict(), flags=flags
                 ),
-                "memory": render_template("render_memory.html", memory=controller.op.memory),
+                "memory": render_template("render_memory.html", ram=ram, rom=rom),
                 "assembler": render_template("render_assembler.html", assembler=controller.op._assembler),
             }
 
@@ -70,12 +91,13 @@ def step():
     if controller.ready:
         try:
             controller.run_once()
+            ram, rom = _get_ram_and_rom()
             return {
                 "index": controller._run_idx,
                 "registers_flags": render_template(
                     "render_registers_flags.html", registers=controller.op.super_memory._registers_todict(), flags=flags
                 ),
-                "memory": render_template("render_memory.html", memory=controller.op.memory),
+                "memory": render_template("render_memory.html", ram=ram, rom=rom),
                 "assembler": render_template("render_assembler.html", assembler=controller.op._assembler),
             }
         except Exception as e:
@@ -95,14 +117,14 @@ def update_memory():
             for memloc, memdata in mem_data:
                 print("=============================")
                 print(memloc, memdata)
-                controller.op.memory_write(memloc, memdata)
-
+                controller.op.memory_ram_write(memloc, memdata)
+            ram, rom = _get_ram_and_rom()
             return {
                 "index": controller._run_idx,
                 "registers_flags": render_template(
                     "render_registers_flags.html", registers=controller.op.super_memory._registers_todict(), flags=flags
                 ),
-                "memory": render_template("render_memory.html", memory=controller.op.memory),
+                "memory": render_template("render_memory.html", ram=ram, rom=rom),
                 "assembler": render_template("render_assembler.html", assembler=controller.op._assembler),
             }
         except Exception as e:
@@ -115,9 +137,11 @@ def update_memory():
 def main():
     global controller
     controller = Controller()
+    ram, rom = _get_ram_and_rom()
     return render_template(
         "index.html",
-        memory=controller.op.memory,
+        ram=ram,
+        rom=rom,
         registers=controller.op.super_memory._registers_todict(),
         flags=flags,
     )

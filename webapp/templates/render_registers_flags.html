@@ -1,0 +1,47 @@
+{% if registers %}
+<div class="registers-container" style="grid-area: a;">
+    <div class="table-container">
+        <table class="table table-striped table-hover table-dark">
+            <thead class="thead-dark">
+                <tr>
+                    <th scope="col">Register</th>
+                    <th scope="col">Value</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for key, value in registers.items() %}
+                <tr>
+                    <td>{{key}}</td>
+                    <td>{{value}}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+{% if flags %}
+<div class="flags-container" style="grid-area: b;">
+    <div class="table-container">
+        <table class="table table-striped table-hover table-dark" id="flags-table">
+            <thead class="thead-dark">
+                <th>Flag</th>
+                <th>Value</th>
+            </thead>
+            <tbody>
+                {% for key, value in flags.items() %}
+                <tr>
+                    <td>{{ key }}</td>
+                    {% if not value %}
+                    <td><input class="form-check-input flag-input" type="checkbox" id="{{key}}"></td>
+                    {% else %}
+                    <td><input class="form-check-input flag-input" type="checkbox" id="{{key}}" checked></td>
+                    {% endif %}
+                    <!-- <td>{{ value }}</td> -->
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
