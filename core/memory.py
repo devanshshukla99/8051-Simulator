@@ -49,7 +49,10 @@ class Memory(dict):
             raise InvalidMemoryAddress()
         if int(str(value), self._base) > self._memory_limit:
             raise MemoryLimitExceeded()
-        return format(int(value, self._base), self._format_spec)
+        return format(int(str(value), self._base), self._format_spec)
+
+    def get(self, addr: str) -> Byte:
+        return self.__getitem__(addr)
 
     def sort(self):
         return dict(sorted(self.items(), key=lambda x: int(str(x[0]), 16)))
@@ -64,13 +67,13 @@ class Memory(dict):
 
 
 class RegisterPair:
-    def __init__(self, reg_1, reg_2, *args, **kwargs):
+    def __init__(self, reg_1, addr_1, reg_2, addr_2, memory_ram, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._reg_1 = reg_1
         self._reg_2 = reg_2
         self._registers = {
-            reg_1: Byte(),
-            reg_2: Byte(),
+            reg_1: LinkedRegister(memory_ram, addr_1),
+            reg_2: LinkedRegister(memory_ram, addr_2),
         }
         self._bytes = 2
         self._base = 16
@@ -209,16 +212,35 @@ class ProgramCounter(Byte):
         return True
 
 
+class LinkedRegister:
+    def __init__(self, memory_ram: dict, addr: str) -> None:
+        self.memory_ram = memory_ram
+        setattr(
+            self,
+            "read",
+            lambda *args: self.memory_ram.get(addr),
+        )
+        setattr(
+            self,
+            "write",
+            lambda data, *args: self.memory_ram.get("0xE0").update(data),
+        )
+        pass
+
+    def __repr__(self):
+        return f"{self.read()}"
+
+
 class SuperMemory:
     def __init__(self) -> None:
         self.memory_rom = Memory(4096, "0x0000")
-        self.memory_ram = Memory(128, "0x00")
+        self.memory_ram = Memory(256, "0x00")
 
-        self.A = Byte()
-        self.B = Byte()
+        self.A = LinkedRegister(self.memory_ram, "0xE0")
+        self.B = LinkedRegister(self.memory_ram, "0xF0")
         self.SP = StackPointer(self.memory_ram, "0x07", _bytes=1)
         self.PC = ProgramCounter(self.memory_rom)
-        self.DPTR = RegisterPair("DPL", "DPH")
+        self.DPTR = RegisterPair("DPH", "0x83", "DPL", "0x82", self.memory_ram)
         self._define_general_purpose_registers()
 
     def __repr__(self) -> str:
@@ -234,42 +256,58 @@ class SuperMemory:
         setattr(
             self.R0.__func__,
             "read",
-            lambda: self._general_purpose_registers.get("".join([str(int(flags.RS1)), str(int(flags.RS0))])).get("R0"),
+            lambda *args: self._general_purpose_registers.get("".join([str(int(flags.RS1)), str(int(flags.RS0))])).get(
+                "R0"
+            ),
         )
         setattr(
             self.R1.__func__,
             "read",
-            lambda: self._general_purpose_registers.get("".join([str(int(flags.RS1)), str(int(flags.RS0))])).get("R1"),
+            lambda *args: self._general_purpose_registers.get("".join([str(int(flags.RS1)), str(int(flags.RS0))])).get(
+                "R1"
+            ),
         )
         setattr(
             self.R2.__func__,
             "read",
-            lambda: self._general_purpose_registers.get("".join([str(int(flags.RS1)), str(int(flags.RS0))])).get("R2"),
+            lambda *args: self._general_purpose_registers.get("".join([str(int(flags.RS1)), str(int(flags.RS0))])).get(
+                "R2"
+            ),
         )
         setattr(
             self.R3.__func__,
             "read",
-            lambda: self._general_purpose_registers.get("".join([str(int(flags.RS1)), str(int(flags.RS0))])).get("R3"),
+            lambda *args: self._general_purpose_registers.get("".join([str(int(flags.RS1)), str(int(flags.RS0))])).get(
+                "R3"
+            ),
         )
         setattr(
             self.R4.__func__,
             "read",
-            lambda: self._general_purpose_registers.get("".join([str(int(flags.RS1)), str(int(flags.RS0))])).get("R4"),
+            lambda *args: self._general_purpose_registers.get("".join([str(int(flags.RS1)), str(int(flags.RS0))])).get(
+                "R4"
+            ),
         )
         setattr(
             self.R5.__func__,
             "read",
-            lambda: self._general_purpose_registers.get("".join([str(int(flags.RS1)), str(int(flags.RS0))])).get("R5"),
+            lambda *args: self._general_purpose_registers.get("".join([str(int(flags.RS1)), str(int(flags.RS0))])).get(
+                "R5"
+            ),
         )
         setattr(
             self.R6.__func__,
             "read",
-            lambda: self._general_purpose_registers.get("".join([str(int(flags.RS1)), str(int(flags.RS0))])).get("R6"),
+            lambda *args: self._general_purpose_registers.get("".join([str(int(flags.RS1)), str(int(flags.RS0))])).get(
+                "R6"
+            ),
         )
         setattr(
             self.R7.__func__,
             "read",
-            lambda: self._general_purpose_registers.get("".join([str(int(flags.RS1)), str(int(flags.RS0))])).get("R7"),
+            lambda *args: self._general_purpose_registers.get("".join([str(int(flags.RS1)), str(int(flags.RS0))])).get(
+                "R7"
+            ),
         )
 
         setattr(
@@ -364,6 +402,12 @@ class SuperMemory:
             "PC": f"{self.PC}",
             "DPTR": f"{self.DPTR}",
         }
+
+    def A(self):
+        pass
+
+    def B(self):
+        pass
 
     def R0(self):
         pass
