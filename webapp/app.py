@@ -2,8 +2,10 @@ import json
 
 from flask import Flask, make_response, render_template, request
 
+from core.util import fill_memory
 from core.controller import Controller
-from core.flags import flags
+
+# from core.flags import flags
 
 CLEAR_TOKEN = "batman"
 app = Flask(__name__, static_folder="static")
@@ -12,7 +14,7 @@ controller = Controller()
 
 def _get_ram_and_rom():
     _memory_ram, _memory_rom = None, None
-    _ram = controller.op.memory_ram.sort()
+    _ram = fill_memory(controller.op.memory_ram, 256).sort()
     if _ram:
         _ram = list(_ram.items())
         _memory_ram = [_ram[x : x + 16] for x in range(0, len(_ram), 16)]
@@ -33,7 +35,9 @@ def reset():
     ram, rom = _get_ram_and_rom()
     return {
         "registers_flags": render_template(
-            "render_registers_flags.html", registers=controller.op.super_memory._registers_todict(), flags=flags
+            "render_registers_flags.html",
+            registers=controller.op.super_memory._registers_todict(),
+            flags=controller.op.super_memory.PSW,
         ),
         "memory": render_template("render_memory.html", ram=ram, rom=rom),
         "assembler": render_template("render_assembler.html", assembler=controller.op._assembler),
@@ -72,7 +76,9 @@ def run():
             print(f"{controller.inspect}")
             return {
                 "registers_flags": render_template(
-                    "render_registers_flags.html", registers=controller.op.super_memory._registers_todict(), flags=flags
+                    "render_registers_flags.html",
+                    registers=controller.op.super_memory._registers_todict(),
+                    flags=controller.op.super_memory.PSW,
                 ),
                 "memory": render_template("render_memory.html", ram=ram, rom=rom),
                 "assembler": render_template("render_assembler.html", assembler=controller.op._assembler),
@@ -95,7 +101,9 @@ def step():
             return {
                 "index": controller._run_idx,
                 "registers_flags": render_template(
-                    "render_registers_flags.html", registers=controller.op.super_memory._registers_todict(), flags=flags
+                    "render_registers_flags.html",
+                    registers=controller.op.super_memory._registers_todict(),
+                    flags=controller.op.super_memory.PSW,
                 ),
                 "memory": render_template("render_memory.html", ram=ram, rom=rom),
                 "assembler": render_template("render_assembler.html", assembler=controller.op._assembler),
@@ -122,7 +130,9 @@ def update_memory():
             return {
                 "index": controller._run_idx,
                 "registers_flags": render_template(
-                    "render_registers_flags.html", registers=controller.op.super_memory._registers_todict(), flags=flags
+                    "render_registers_flags.html",
+                    registers=controller.op.super_memory._registers_todict(),
+                    flags=controller.op.super_memory.PSW,
                 ),
                 "memory": render_template("render_memory.html", ram=ram, rom=rom),
                 "assembler": render_template("render_assembler.html", assembler=controller.op._assembler),
@@ -143,5 +153,5 @@ def main():
         ram=ram,
         rom=rom,
         registers=controller.op.super_memory._registers_todict(),
-        flags=flags,
+        flags=controller.op.super_memory.PSW,
     )

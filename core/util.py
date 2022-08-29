@@ -1,4 +1,5 @@
 import re
+from copy import copy
 
 
 def twos_complement(num, _base=16):
@@ -78,6 +79,7 @@ def construct_hex(hex1, hex2, _bytes=2):
     bin_total = "".join(["0b", bin1, bin2])
     return f'0x{format(int(bin_total, 2), f"0{_bytes * 2}x")}'
 
+
 def get_byte_sequence(start, size, _bytes=1) -> list:
     _ret_array = []
     _hex_val = start
@@ -85,3 +87,12 @@ def get_byte_sequence(start, size, _bytes=1) -> list:
         _ret_array.append(_hex_val)
         _hex_val = format(int(_hex_val, 16) + 1, f"#0{_bytes * 2 + 2}x")
     return _ret_array
+
+
+def fill_memory(memory, size) -> dict:
+    copied_memory = copy(memory)
+    for i in range(0, size):
+        iH = format(i, "#06x")
+        if iH not in copied_memory:
+            copied_memory.get(iH)
+    return copied_memory
