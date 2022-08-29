@@ -1,5 +1,3 @@
-import warnings
-from core.flags import flags
 from core.util import decompose_byte, twos_complement
 
 
@@ -9,6 +7,7 @@ class Instructions:
         self._jump_flag = False
         self._jump_instructions = []  # Add later
         self._base = 16
+        self.flags = self.op.super_memory.PSW
         pass
 
     def _is_jump_opcode(self, opcode) -> bool:
@@ -22,7 +21,7 @@ class Instructions:
 
     def _check_carry(self, data_1, data_2, og2, add=True, _AC=True, _CY=True) -> None:
         """
-        Method to check both `CY` and `AC` flags.
+        Method to check both `CY` and `AC` self.flags.
 
         `aux_data` are the LSB of the two data to be added
         For example: for `0x11` and `0xae`, `aux_data=["0x1", "0xe"]`
@@ -32,33 +31,33 @@ class Instructions:
         carry_data, aux_data = list(zip(decomposed_data_1, decomposed_data_2))
 
         if _AC:
-            flags.AC = False
+            self.flags.AC = False
             if (int(aux_data[0], 16) + int(aux_data[1], 16)) >= 16:
                 print("AUX FLAG")
-                flags.AC = True
+                self.flags.AC = True
 
         if not _CY:
             return
 
         if not add:
-            flags.C = False
+            self.flags.C = False
             if int(str(data_1), 16) < int(str(og2), 16):
                 print("CARRY FLAG-")
-                flags.CY = True
+                self.flags.CY = True
         return
 
     def _check_parity(self, data_bin: str) -> None:
-        flags.P = False
+        self.flags.P = False
         _count_1s = data_bin.count("1")
         if not _count_1s % 2:
-            flags.P = True
+            self.flags.P = True
             print("PARITY")
         return
 
     def _check_overflow(self, data_bin: str) -> None:
-        flags.OV = False
+        self.flags.OV = False
         if int(data_bin[0]):
-            flags.OV = True
+            self.flags.OV = True
             print("SIGN")
         return
 
@@ -77,7 +76,7 @@ class Instructions:
         result = int(str(data_1), 16) + int(str(data_2), 16)
         if result > 255:
             if _CY:
-                flags.CY = True
+                self.flags.CY = True
                 print("CARRY FLAG+")
             result -= 256
         result_hex = format(result, "#04x")

@@ -2,7 +2,8 @@ from keyword import iskeyword
 import re
 
 from core.exceptions import OPCODENotFound, SyntaxError
-from core.flags import flags
+
+# from core.flags import flags
 from core.memory import Byte, SuperMemory
 from core.opcodes import opcodes_lookup
 from core.util import decompose_byte, ishex, tohex
@@ -10,15 +11,15 @@ from core.util import decompose_byte, ishex, tohex
 
 class Operations:
     def __init__(self) -> None:
-        flags.reset()
-        self.flags = flags
         self.super_memory = SuperMemory()
         self.memory_rom = self.super_memory.memory_rom
         self.memory_ram = self.super_memory.memory_ram
+        self.flags = self.super_memory.PSW
+        self.flags.reset()
         self.super_memory.PC("0x0000")
         self._registers_list = {
             "A": self.super_memory.A,  # Accumulator
-            "PSW": self.flags.PSW,  # Program Status Word
+            "PSW": self.flags._PSW,  # Program Status Word
             "B": self.super_memory.B,  # Register B
             "SP": self.super_memory.SP,  # Stack Pointer
             "PC": self.super_memory.PC,  # Program Counter
@@ -59,7 +60,7 @@ class Operations:
         return False
 
     def inspect(self):
-        return "\n\n".join([flags.inspect(), self.super_memory.inspect()])
+        return self.super_memory.inspect()
 
     def _parse_addr(self, addr):
         addr = addr.upper()
