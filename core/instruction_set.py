@@ -87,9 +87,25 @@ class Instructions:
         self._check_flags(data_bin, _P=_P, _OV=_OV)
         return result_hex
 
+    def _resolve_addressing_mode(self, addr, data=None) -> tuple:
+        if addr[0] == "@":  # Register indirect
+            addr = addr[1:]
+            addr = self.op.memory_read(addr)
+
+        if data:
+            if data[0] == "@":  # Register indirect
+                data = self.op.memory_read(data[1:])
+            elif data[0] == "#":  # Direct addressing
+                data = data[1:]
+            else:
+                data = self.op.memory_read(data)
+        return addr, data
+
     def mov(self, addr, data) -> bool:
-        if data[0] != "#":  # Direct addressing
-            data = self.op.memory_read(data)
-        else:
-            data = data[1:]
+        addr, data = self._resolve_addressing_mode(addr, data)
         return self.op.memory_write(addr, data)
+
+    def inc(self, addr) -> bool:
+        addr, _ = self._resolve_addressing_mode(addr)
+        data = self.op.memory_read(addr)
+        return self.op.memory_write(addr, data + 1)

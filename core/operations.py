@@ -77,17 +77,25 @@ class Operations:
         _args_params = []
         _args_hexs = []
         for x in args:
-            if self.iskeyword(x):
-                _args_params.append(x)
+            if self.iskeyword(x) or self.iskeyword(x[1:]):
+                if x[0] == "@":
+                    print("Register indirect")
+                    _args_params.append(x)
+                else:
+                    _args_params.append(x)
             else:
                 print("not a key word")
                 if x[0] == "#":  # immediate
                     x = x[1:]
                     print("#immed")
-                    _args_params.append("#immed")
+                    _args_params.append("#IMMED")
+                # elif x[0] == "@":
+                #     x = x[1:]
+                #     print("register indirect")
+                #     _args_params.append("DIRECT")
                 else:
                     print("direct")
-                    _args_params.append("direct")
+                    _args_params.append("DIRECT")
                 _args_hexs.append(decompose_byte(tohex(x)))
 
         print(_args_params)
