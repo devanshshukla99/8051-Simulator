@@ -29,15 +29,8 @@ class JumpFlag:
 
 
 class Flags:
-    """
-    C = Carry
-    AC = Auxillary Carry
-    S = Sign
-    P = Parity
-    Z = Zero
-    """
-
     def __init__(self) -> None:
+        raise DeprecationWarning("USE core.memory.ProgramStatusWord instead")
         self._flags = {
             "P": False,  # D0
             "_UD": False,  # D1 = UserDefined
@@ -119,4 +112,4 @@ class Flags:
     pass
 
 
-flags = Flags()
+# flags = Flags()
