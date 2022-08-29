@@ -1,9 +1,9 @@
 import re
 import textwrap
 
-from core.flags import flags
+# from core.flags import flags
 from core.basic_memory import Byte
-from core.util import get_byte_sequence
+from core.util import decompose_byte, get_byte_sequence
 from core.exceptions import InvalidMemoryAddress, MemoryLimitExceeded
 
 """
@@ -214,6 +214,7 @@ class ProgramCounter(Byte):
 
 class LinkedRegister:
     def __init__(self, memory_ram: dict, addr: str) -> None:
+        self._base = 16
         self.memory_ram = memory_ram
         setattr(
             self,
@@ -223,12 +224,182 @@ class LinkedRegister:
         setattr(
             self,
             "write",
-            lambda data, *args: self.memory_ram.get("0xE0").update(data),
+            lambda data, *args: self.memory_ram.get(addr).update(data),
         )
         pass
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{self.read()}"
+
+    def __str__(self) -> str:
+        return self.__repr__()
+
+    def bin(self) -> str:
+        return self.read().bin()
+
+
+class DataPointer:
+    def __init__(self, memory_ram: dict, addr: list, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.memory_ram = memory_ram
+        self._DPL = LinkedRegister(memory_ram, addr[0])
+        self._DPH = LinkedRegister(memory_ram, addr[1])
+        self._bytes = 2
+        self._base = 16
+        return
+
+    def __repr__(self) -> str:
+        return f"{self.read()}"
+
+    def __str__(self) -> str:
+        return self.__repr__()
+
+    def __add__(self, val: int, *args, **kwargs) -> str:
+        """
+        val: `int`
+        """
+        data_int = int(self._data, self._base) + val
+        if data_int > self._memory_limit:
+            data_int -= self._memory_limit
+        elif data_int < 0:
+            data_int += self._memory_limit
+        self._data = format(data_int, self._format_spec)
+        return self._data
+
+    def __sub__(self, val: int, *args, **kwargs) -> str:
+        """
+        val: `int`
+        """
+        data_int = int(self._data, self._base) - val
+        if data_int > self._memory_limit:
+            data_int -= self._memory_limit
+        elif data_int < 0:
+            data_int += self._memory_limit
+        self._data = format(data_int, self._format_spec)
+        return self._data
+
+    def __next__(self):
+        return self.__add__(1)
+
+    def read(self, *args, **kwargs) -> Byte:
+        bin1 = format(int(str(self._DPL.read()), self._base), f"0{8*self._bytes}b")  # single byte
+        bin2 = format(int(str(self._DPH.read()), self._base), f"0{8*self._bytes}b")  # single byte
+        bin_total = "".join(["0b", bin2, bin1])
+        return format(int(bin_total, 2), f"#0{self._bytes*2 + 2}x")
+
+    def write(self, data, *args) -> Byte:
+        data = decompose_byte(data)
+        if len(data) != 2:
+            raise InvalidMemoryAddress
+        self._DPL.write(data[0])
+        self._DPH.write(data[1])
+        return True
+
+
+class ProgramStatusWord:
+    """
+    "P": False,  # D0
+    "_UD": False,  # D1 = UserDefined
+    "OV": False,  # D2 = Overflow
+    "RS0": False,  # D3 = Register bank selector
+    "RS1": False,  # D4 = Register bank selector
+    "F0": False,  # D5 = available for general purpose
+    "AC": False,  # D6 = Aux Carry
+    "CY": False,  # D7 = Carry
+    """
+
+    def __init__(self, memory_ram: dict, addr: str) -> None:
+        self._PSW = LinkedRegister(memory_ram, addr)
+        self._flags = {
+            "P": False,
+            "_UD": False,
+            "OV": False,
+            "RS0": False,
+            "RS1": False,
+            "F0": False,
+            "AC": False,
+            "CY": False,
+        }
+        pass
+
+    def __repr__(self):
+        return self.inspect()
+
+    def __getitem__(self, key):
+        return self._flags[key]
+
+    def _update_flags(self) -> None:
+        binary_data = self._PSW.bin()
+        self._flags = {
+            "P": bool(int(binary_data[9])),
+            "_UD": bool(int(binary_data[8])),
+            "OV": bool(int(binary_data[7])),
+            "RS0": bool(int(binary_data[6])),
+            "RS1": bool(int(binary_data[5])),
+            "F0": bool(int(binary_data[4])),
+            "AC": bool(int(binary_data[3])),
+            "CY": bool(int(binary_data[2])),
+        }
+        return
+
+    def _update_PSW(self) -> bool:
+        binary_data = "0b" + "".join([str(int(x)) for x in list(self._flags.values())[::-1]])
+        print(f"flags binary data: {binary_data}")
+        hex_data = format(int(binary_data, 2), "#04x")
+        print(f"flags hex data: {hex_data}")
+        return self._PSW.write(hex_data)
+
+    def read(self) -> str:
+        return self._PSW.read()
+
+    def write(self, data: str) -> bool:
+        self._PSW.write(data)
+        self._update_flags()
+        return True
+
+    def inspect(self) -> str:
+        binary_data = self._PSW.bin()
+        return textwrap.dedent(
+            f"""
+            Flags
+            -----
+            "P" \t: {bool(int(binary_data[9]))}
+            "_UD" \t: {bool(int(binary_data[8]))}
+            "OV" \t: {bool(int(binary_data[7]))}
+            "RS0" \t: {bool(int(binary_data[6]))}
+            "RS1" \t: {bool(int(binary_data[5]))}
+            "F0" \t: {bool(int(binary_data[4]))}
+            "AC" \t: {bool(int(binary_data[3]))}
+            "CY" \t: {bool(int(binary_data[2]))}
+            """
+        )
+
+    def get(self):
+        return self._flags
+
+    def items(self):
+        return self._flags.items()
+
+    def reset(self):
+        return self._PSW.write("0x00")
+
+    def set_flags(self, flags):
+        self._flags = flags
+        return self._update_PSW()
+
+    def _setitem_flag(self, flag, val):
+        self._flags.__setitem__(flag, val)
+        return self._update_PSW()
+
+    P = property(fget=lambda self: self._flags.get("P"), fset=lambda self, val: self._setitem_flag("P", val))
+    _UD = property(fget=lambda self: self._flags.get("_UD"), fset=lambda self, val: self._setitem_flag("_UD", val))
+    OV = property(fget=lambda self: self._flags.get("OV"), fset=lambda self, val: self._setitem_flag("OV", val))
+    RS0 = property(fget=lambda self: self._flags.get("RS0"), fset=lambda self, val: self._setitem_flag("RS0", val))
+    RS1 = property(fget=lambda self: self._flags.get("RS1"), fset=lambda self, val: self._setitem_flag("RS1", val))
+    F0 = property(fget=lambda self: self._flags.get("F0"), fset=lambda self, val: self._setitem_flag("F0", val))
+    AC = property(fget=lambda self: self._flags.get("AC"), fset=lambda self, val: self._setitem_flag("AC", val))
+    CY = property(fget=lambda self: self._flags.get("CY"), fset=lambda self, val: self._setitem_flag("CY", val))
+    pass
 
 
 class SuperMemory:
@@ -240,7 +411,10 @@ class SuperMemory:
         self.B = LinkedRegister(self.memory_ram, "0xF0")
         self.SP = StackPointer(self.memory_ram, "0x07", _bytes=1)
         self.PC = ProgramCounter(self.memory_rom)
-        self.DPTR = RegisterPair("DPH", "0x83", "DPL", "0x82", self.memory_ram)
+        self.DPTR = DataPointer(self.memory_ram, ["0x82", "0x83"])
+        self.DPL = self.DPTR._DPL
+        self.DPH = self.DPTR._DPH
+        self.PSW = ProgramStatusWord(self.memory_ram, "0x0D0")
         self._define_general_purpose_registers()
 
     def __repr__(self) -> str:
@@ -256,113 +430,129 @@ class SuperMemory:
         setattr(
             self.R0.__func__,
             "read",
-            lambda *args: self._general_purpose_registers.get("".join([str(int(flags.RS1)), str(int(flags.RS0))])).get(
-                "R0"
-            ),
+            lambda *args: self._general_purpose_registers.get(
+                "".join([str(int(self.PSW.RS1)), str(int(self.PSW.RS0))])
+            ).get("R0"),
         )
         setattr(
             self.R1.__func__,
             "read",
-            lambda *args: self._general_purpose_registers.get("".join([str(int(flags.RS1)), str(int(flags.RS0))])).get(
-                "R1"
-            ),
+            lambda *args: self._general_purpose_registers.get(
+                "".join([str(int(self.PSW.RS1)), str(int(self.PSW.RS0))])
+            ).get("R1"),
         )
         setattr(
             self.R2.__func__,
             "read",
-            lambda *args: self._general_purpose_registers.get("".join([str(int(flags.RS1)), str(int(flags.RS0))])).get(
-                "R2"
-            ),
+            lambda *args: self._general_purpose_registers.get(
+                "".join([str(int(self.PSW.RS1)), str(int(self.PSW.RS0))])
+            ).get("R2"),
         )
         setattr(
             self.R3.__func__,
             "read",
-            lambda *args: self._general_purpose_registers.get("".join([str(int(flags.RS1)), str(int(flags.RS0))])).get(
-                "R3"
-            ),
+            lambda *args: self._general_purpose_registers.get(
+                "".join([str(int(self.PSW.RS1)), str(int(self.PSW.RS0))])
+            ).get("R3"),
         )
         setattr(
             self.R4.__func__,
             "read",
-            lambda *args: self._general_purpose_registers.get("".join([str(int(flags.RS1)), str(int(flags.RS0))])).get(
-                "R4"
-            ),
+            lambda *args: self._general_purpose_registers.get(
+                "".join([str(int(self.PSW.RS1)), str(int(self.PSW.RS0))])
+            ).get("R4"),
         )
         setattr(
             self.R5.__func__,
             "read",
-            lambda *args: self._general_purpose_registers.get("".join([str(int(flags.RS1)), str(int(flags.RS0))])).get(
-                "R5"
-            ),
+            lambda *args: self._general_purpose_registers.get(
+                "".join([str(int(self.PSW.RS1)), str(int(self.PSW.RS0))])
+            ).get("R5"),
         )
         setattr(
             self.R6.__func__,
             "read",
-            lambda *args: self._general_purpose_registers.get("".join([str(int(flags.RS1)), str(int(flags.RS0))])).get(
-                "R6"
-            ),
+            lambda *args: self._general_purpose_registers.get(
+                "".join([str(int(self.PSW.RS1)), str(int(self.PSW.RS0))])
+            ).get("R6"),
         )
         setattr(
             self.R7.__func__,
             "read",
-            lambda *args: self._general_purpose_registers.get("".join([str(int(flags.RS1)), str(int(flags.RS0))])).get(
-                "R7"
-            ),
+            lambda *args: self._general_purpose_registers.get(
+                "".join([str(int(self.PSW.RS1)), str(int(self.PSW.RS0))])
+            ).get("R7"),
         )
 
         setattr(
             self.R0.__func__,
             "write",
-            lambda data, *args: self._general_purpose_registers.get("".join([str(int(flags.RS1)), str(int(flags.RS0))]))
+            lambda data, *args: self._general_purpose_registers.get(
+                "".join([str(int(self.PSW.RS1)), str(int(self.PSW.RS0))])
+            )
             .__getitem__("R0")
             .update(data),
         )
         setattr(
             self.R1.__func__,
             "write",
-            lambda data, *args: self._general_purpose_registers.get("".join([str(int(flags.RS1)), str(int(flags.RS0))]))
+            lambda data, *args: self._general_purpose_registers.get(
+                "".join([str(int(self.PSW.RS1)), str(int(self.PSW.RS0))])
+            )
             .__getitem__("R1")
             .update(data),
         )
         setattr(
             self.R2.__func__,
             "write",
-            lambda data, *args: self._general_purpose_registers.get("".join([str(int(flags.RS1)), str(int(flags.RS0))]))
+            lambda data, *args: self._general_purpose_registers.get(
+                "".join([str(int(self.PSW.RS1)), str(int(self.PSW.RS0))])
+            )
             .__getitem__("R2")
             .update(data),
         )
         setattr(
             self.R3.__func__,
             "write",
-            lambda data, *args: self._general_purpose_registers.get("".join([str(int(flags.RS1)), str(int(flags.RS0))]))
+            lambda data, *args: self._general_purpose_registers.get(
+                "".join([str(int(self.PSW.RS1)), str(int(self.PSW.RS0))])
+            )
             .__getitem__("R3")
             .update(data),
         )
         setattr(
             self.R4.__func__,
             "write",
-            lambda data, *args: self._general_purpose_registers.get("".join([str(int(flags.RS1)), str(int(flags.RS0))]))
+            lambda data, *args: self._general_purpose_registers.get(
+                "".join([str(int(self.PSW.RS1)), str(int(self.PSW.RS0))])
+            )
             .__getitem__("R4")
             .update(data),
         )
         setattr(
             self.R5.__func__,
             "write",
-            lambda data, *args: self._general_purpose_registers.get("".join([str(int(flags.RS1)), str(int(flags.RS0))]))
+            lambda data, *args: self._general_purpose_registers.get(
+                "".join([str(int(self.PSW.RS1)), str(int(self.PSW.RS0))])
+            )
             .__getitem__("R5")
             .update(data),
         )
         setattr(
             self.R6.__func__,
             "write",
-            lambda data, *args: self._general_purpose_registers.get("".join([str(int(flags.RS1)), str(int(flags.RS0))]))
+            lambda data, *args: self._general_purpose_registers.get(
+                "".join([str(int(self.PSW.RS1)), str(int(self.PSW.RS0))])
+            )
             .__getitem__("R6")
             .update(data),
         )
         setattr(
             self.R7.__func__,
             "write",
-            lambda data, *args: self._general_purpose_registers.get("".join([str(int(flags.RS1)), str(int(flags.RS0))]))
+            lambda data, *args: self._general_purpose_registers.get(
+                "".join([str(int(self.PSW.RS1)), str(int(self.PSW.RS0))])
+            )
             .__getitem__("R7")
             .update(data),
         )
@@ -372,7 +562,7 @@ class SuperMemory:
             f"""
             Registers
             ---------
-            A/PSW \t= {self.A} {flags.PSW}
+            A/PSW \t= {self.A} {self.PSW._PSW}
             B \t= {self.B}
             SP \t= {self.SP}
             PC \t= {self.PC}
@@ -396,7 +586,7 @@ class SuperMemory:
 
     def _registers_todict(self):
         return {
-            "A/PSW": f"{self.A} {flags.PSW}",
+            "A/PSW": f"{self.A} {self.PSW._PSW}",
             "B": f"{self.B}",
             "SP": f"{self.SP}",
             "PC": f"{self.PC}",
@@ -435,7 +625,14 @@ class SuperMemory:
 
     def inspect(self):
         return "\n\n".join(
-            [self._reg_inspect(), "\nRAM", str(self.memory_ram.sort()), "\nROM", str(self.memory_rom.sort())]
+            [
+                self.PSW.inspect(),
+                self._reg_inspect(),
+                "\nRAM",
+                str(self.memory_ram.sort()),
+                "\nROM",
+                str(self.memory_rom.sort()),
+            ]
         )
 
     pass
