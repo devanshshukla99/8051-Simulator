@@ -24,7 +24,8 @@
 }
 
 table {
-    text-align: center
+    text-align: center;
+    font-size: 11px;
 }
 
 .memory-container {
