@@ -40,7 +40,7 @@ class Instructions:
             return
 
         if not add:
-            self.flags.C = False
+            self.flags.CY = False
             if int(str(data_1), 16) < int(str(og2), 16):
                 print("CARRY FLAG-")
                 self.flags.CY = True
@@ -88,13 +88,12 @@ class Instructions:
 
     def _resolve_addressing_mode(self, addr, data=None) -> tuple:
         if addr[0] == "@":  # Register indirect
-            addr = addr[1:]
-            addr = self.op.memory_read(addr)
+            addr = self.op.memory_read(addr[1:])
 
         if data:
             if data[0] == "@":  # Register indirect
                 data = self.op.memory_read(data[1:])
-            elif data[0] == "#":  # Direct addressing
+            elif data[0] == "#":  # Immediate addressing
                 data = data[1:]
             else:
                 data = self.op.memory_read(data)
@@ -104,7 +103,84 @@ class Instructions:
         addr, data = self._resolve_addressing_mode(addr, data)
         return self.op.memory_write(addr, data)
 
+    def add(self, addr, data) -> bool:
+        addr, data_1 = self._resolve_addressing_mode(addr, data)
+        data_2 = self.op.memory_read(addr)
+        result_hex = self._check_flags_and_compute(data_1, data_2)
+        return self.op.memory_write(addr, result_hex)
+
+    def subb(self, addr, data) -> bool:
+        addr, data_2 = self._resolve_addressing_mode(addr, data)
+        data_1 = self.op.memory_read(addr)
+        if self.flags.CY:
+            self.flags.CY = False
+            data_2 += 1
+        result_hex = self._check_flags_and_compute(data_1, data_2, add=False)
+        return self.op.memory_write(addr, result_hex)
+
+    def anl(self, addr_1, addr_2) -> bool:
+        raise AssertionError
+        addr_1, _ = self._resolve_addressing_mode(addr_1)
+        addr_2, _ = self._resolve_addressing_mode(addr_2)
+
+        data_1 = int(self.op.memory_read(addr_1))
+        data_2 = int(self.op.memory_read(addr_2))
+        result = format(data_1 & data_2, "#04x")
+        self.op.memory_write(addr_1, result)
+        return self._check_flags(format(int(result, self._base), "08b"))
+
+    def orl(self, addr_1, addr_2) -> bool:
+        raise AssertionError
+        addr_1, _ = self._resolve_addressing_mode(addr_1)
+        addr_2, _ = self._resolve_addressing_mode(addr_2)
+
+        data_1 = int(self.op.memory_read(addr_1))
+        data_2 = int(self.op.memory_read(addr_2))
+        result = format(data_1 | data_2, "#04x")
+        self.op.memory_write(addr_1, result)
+        return self._check_flags(format(int(result, self._base), "08b"))
+
     def inc(self, addr) -> bool:
         addr, _ = self._resolve_addressing_mode(addr)
         data = self.op.memory_read(addr)
         return self.op.memory_write(addr, data + 1)
+
+    def dec(self, addr) -> bool:
+        addr, _ = self._resolve_addressing_mode(addr)
+        print(f"addr: {addr}")
+        data = self.op.memory_read(addr)
+        data_to_write = self._check_flags_and_compute(
+            data, "0x01", add=False, _CY=False, _AC=False, _P=False, _OV=False
+        )
+        return self.op.memory_write(addr, data_to_write)
+
+    def rl(self, addr) -> bool:
+        """Rotate left without carry"""
+        addr, _ = self._resolve_addressing_mode(addr)
+        data = self.op.memory_read(addr)
+        data_bin = list(format(int(str(data), 16), "08b"))
+        rolled_data_bin = []
+
+        for i in range(0, len(data_bin[:-1])):
+            rolled_data_bin.append(data_bin[i + 1])
+
+        rolled_data_bin.insert(8, str(int(data_bin[0])))
+        rolled_data_bin = "".join(rolled_data_bin)
+        data_new = format(int(rolled_data_bin, 2), "#02x")
+        return self.op.memory_write("A", data_new)
+
+    def rr(self, addr) -> bool:
+        """Rotate right without carry"""
+        addr, _ = self._resolve_addressing_mode(addr)
+        data = self.op.memory_read(addr)
+        data_bin = list(format(int(str(data), 16), "08b"))
+        rolled_data_bin = []
+        rolled_data_bin.insert(0, str(int(data_bin[7])))
+        for i in range(0, len(data_bin[:-1])):
+            rolled_data_bin.append(data_bin[i])
+
+        rolled_data_bin = "".join(rolled_data_bin)
+        data_new = format(int(rolled_data_bin, 2), "#02x")
+        return self.op.memory_write("A", data_new)
+
+    pass
