@@ -1,5 +1,4 @@
-from keyword import iskeyword
-import re
+from rich.console import Console
 
 from core.exceptions import OPCODENotFound, SyntaxError
 
@@ -11,6 +10,7 @@ from core.util import decompose_byte, ishex, tohex
 
 class Operations:
     def __init__(self) -> None:
+        self.console = Console()
         self.super_memory = SuperMemory()
         self.memory_rom = self.super_memory.memory_rom
         self.memory_ram = self.super_memory.memory_ram
@@ -90,10 +90,6 @@ class Operations:
                     x = x[1:]
                     print("#immed")
                     _args_params.append("#IMMED")
-                # elif x[0] == "@":
-                #     x = x[1:]
-                #     print("register indirect")
-                #     _args_params.append("DIRECT")
                 else:
                     print("direct")
                     _args_params.append("DIRECT")
@@ -104,8 +100,8 @@ class Operations:
 
         # _args_hexs = [decompose_byte(tohex(x))  if ishex(x)]
         _opcode_search_params = " ".join([opcode, *_args_params]).upper()
-        print(_opcode_search_params)
         _opcode_hex = self._lookup_opcodes_dir.get(_opcode_search_params)
+        self.console.log(f"OPCODE: {_opcode_search_params} = {_opcode_hex}")
         if _opcode_hex:
             return _opcode_hex, _args_hexs
         raise OPCODENotFound

@@ -103,7 +103,6 @@ class Controller:
         return self.console.print(self.__repr__())
 
     def _lookup_opcode_func(self, opcode: str):
-        self.console.log(f"OPCODE: {opcode}")
         func = self.lookup.get(opcode)
         if func:
             return func
