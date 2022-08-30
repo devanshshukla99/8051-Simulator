@@ -96,3 +96,11 @@ def fill_memory(memory, size) -> dict:
         if iH not in copied_memory:
             copied_memory.get(iH)
     return copied_memory
+
+
+def hexconvert(value: str) -> str:
+    if re.fullmatch(r"^[0-9a-fA-F]+[h|H]$", str(value)):
+        new_val = "0x" + str(value)[:-1]
+        print(f"converted: {value} -> {new_val}")
+        return new_val
+    return value

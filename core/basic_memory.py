@@ -1,5 +1,6 @@
 import re
 
+from core.util import hexconvert
 from core.exceptions import InvalidMemoryAddress, MemoryLimitExceeded
 
 
@@ -48,7 +49,7 @@ class Hex:
         return self._bytes
 
     def _verify(self, value: str):
-        if not re.fullmatch("^0[x|X][0-9a-fA-F]+", str(value)):
+        if not re.fullmatch(r"^0[x|X][0-9a-fA-F]+", str(value)):
             raise InvalidMemoryAddress()
         if int(str(value), self._base) > self._memory_limit:
             raise MemoryLimitExceeded()
@@ -62,6 +63,7 @@ class Hex:
 
     @data.setter
     def data(self, val: str) -> None:
+        val = hexconvert(val)
         self._verify(val)
         self._data = format(int(str(val), self._base), self._format_spec)
         return
