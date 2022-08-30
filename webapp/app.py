@@ -2,8 +2,8 @@ import json
 
 from flask import Flask, make_response, render_template, request
 
-from core.util import fill_memory
 from core.controller import Controller
+from core.util import fill_memory
 
 # from core.flags import flags
 

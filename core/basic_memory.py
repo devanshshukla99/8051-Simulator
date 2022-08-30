@@ -1,7 +1,7 @@
 import re
 
-from core.util import hexconvert
 from core.exceptions import InvalidMemoryAddress, MemoryLimitExceeded
+from core.util import hexconvert
 
 
 class Hex:

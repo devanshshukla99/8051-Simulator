@@ -3,8 +3,8 @@ import textwrap
 
 # from core.flags import flags
 from core.basic_memory import Byte
-from core.util import decompose_byte, get_byte_sequence
 from core.exceptions import InvalidMemoryAddress, MemoryLimitExceeded
+from core.util import decompose_byte, get_byte_sequence
 
 """
 8051 has
