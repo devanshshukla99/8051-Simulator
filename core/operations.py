@@ -1,11 +1,9 @@
 from rich.console import Console
 
 from core.exceptions import OPCODENotFound, SyntaxError
-
-# from core.flags import flags
 from core.memory import Byte, SuperMemory
 from core.opcodes import opcodes_lookup
-from core.util import decompose_byte, ishex, tohex
+from core.util import decompose_byte, tohex
 
 
 class Operations:
