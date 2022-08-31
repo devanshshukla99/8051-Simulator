@@ -65,7 +65,16 @@ class Controller:
         self._run_idx = idx
         return True
 
+    def _sync_PC(self) -> bool:
+        for asm_instruct in self.op._internal_PC[self._run_idx - 1]:
+            if not asm_instruct:
+                return True
+            self.op.super_memory.PC.write(*asm_instruct)
+            self.console.log(f"Write PC: {asm_instruct}")
+        return True
+
     def _call(self, func, *args, **kwargs) -> bool:
+        self._sync_PC()
         return func(*args)
 
     def _get_jump_flags(self) -> list:

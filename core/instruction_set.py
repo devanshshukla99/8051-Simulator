@@ -183,4 +183,8 @@ class Instructions:
         data_new = format(int(rolled_data_bin, 2), "#02x")
         return self.op.memory_write("A", data_new)
 
+    def org(self, addr) -> bool:
+        """Database directive origin"""
+        return self.op.super_memory.PC(addr)
+
     pass

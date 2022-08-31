@@ -202,12 +202,12 @@ class StackPointer(Byte):
 
 class ProgramCounter(Byte):
     def __init__(self, memory, _bytes=2, *args, **kwargs) -> None:
-        super().__init__(_bytes=2, *args, **kwargs)
+        super().__init__(_bytes=_bytes, *args, **kwargs)
         self.memory = memory
         return
 
     def write(self, data):
-        self.memory[self._data] = data
+        self.memory.write(self._data, data)
         self.__next__()
         return True
 
@@ -410,7 +410,7 @@ class SuperMemory:
         self.A = LinkedRegister(self.memory_ram, "0xE0")
         self.B = LinkedRegister(self.memory_ram, "0xF0")
         self.SP = StackPointer(self.memory_ram, "0x07", _bytes=1)
-        self.PC = ProgramCounter(self.memory_rom)
+        self.PC = ProgramCounter(self.memory_ram)
         self.DPTR = DataPointer(self.memory_ram, ["0x82", "0x83"])
         self.DPL = self.DPTR._DPL
         self.DPH = self.DPTR._DPH

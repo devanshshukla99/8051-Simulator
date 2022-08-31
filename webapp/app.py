@@ -21,7 +21,7 @@ def _get_ram_and_rom():
         _ram = list(_ram.items())
         _memory_ram = [_ram[x : x + 16] for x in range(0, len(_ram), 16)]
 
-    _rom = controller.op.memory_rom.sort()
+    _rom = fill_memory(controller.op.memory_rom, 256).sort()
     if _rom:
         _rom = list(_rom.items())
         _memory_rom = [_rom[x : x + 16] for x in range(0, len(_rom), 16)]

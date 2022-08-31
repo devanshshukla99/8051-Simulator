@@ -40,6 +40,7 @@ class Operations:
         self._keywords = []
         self._generate_keywords()
         self._assembler = {}
+        self._internal_PC = []
         pass
 
     def _generate_keywords(self):
@@ -96,21 +97,27 @@ class Operations:
         print(_args_params)
         print(_args_hexs)
 
-        # _args_hexs = [decompose_byte(tohex(x))  if ishex(x)]
         _opcode_search_params = " ".join([opcode, *_args_params]).upper()
         _opcode_hex = self._lookup_opcodes_dir.get(_opcode_search_params)
         self.console.log(f"OPCODE: {_opcode_search_params} = {_opcode_hex}")
         if _opcode_hex:
+            if _opcode_hex == "0xFFFFFFDB":
+                _opcode_hex = None
             return _opcode_hex, _args_hexs
         raise OPCODENotFound
 
     def prepare_operation(self, command: str, opcode: str, *args, **kwargs) -> bool:
         _opcode_hex, _args_hex = self._opcode_fetch(opcode, *args)
-        self.super_memory.PC.write(_opcode_hex)
+        if not _opcode_hex:
+            """Database directive"""
+            self.console.log("Database directive")
+            self._internal_PC.append([])
+            return True
+
+        self._internal_PC.append([[_opcode_hex], *_args_hex])
         _assembler = [_opcode_hex]
         for x in _args_hex:
             for y in x[::-1]:
-                self.super_memory.PC.write(y)
                 _assembler.append(y)
         self._assembler[command] = " ".join(_assembler).lower()
         return True

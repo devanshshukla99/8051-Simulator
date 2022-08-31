@@ -255,4 +255,5 @@ opcodes_lookup = {
     "MOV R5 A": "0xFD",
     "MOV R6 A": "0xFE",
     "MOV R7 A": "0xFF",
+    "ORG DIRECT": "0xFFFFFFDB",
 }
