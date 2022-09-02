@@ -9,9 +9,10 @@ from core.util import decompose_byte, get_byte_sequence
 """
 8051 has
 
-4kB ROM = 000-FFF
-128B RAM = 00-7F
-4 Register Banks = R0-R7 = 32 general purpose registers = 32Bytes
+4kB ROM = 0000-0FFF
+128 Bytes RAM = 00-7F
+Another 128 Bytes RAM for accumulator and SFR = 7f-FF
+4 Register Banks = R0-R7 = 32 general purpose registers = 32 Bytes
 16 bit timers
 16 bit PC and DPTR
 """
@@ -411,6 +412,7 @@ class SuperMemory:
         self.B = LinkedRegister(self.memory_ram, "0xF0")
         self.SP = StackPointer(self.memory_ram, "0x07", _bytes=1)
         self.PC = ProgramCounter(self.memory_ram)
+        self.PC.write("0x30")  # RAM general scratch pad area
         self.DPTR = DataPointer(self.memory_ram, ["0x82", "0x83"])
         self.DPL = self.DPTR._DPL
         self.DPH = self.DPTR._DPH
