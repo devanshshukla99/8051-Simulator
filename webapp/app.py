@@ -39,7 +39,7 @@ def reset():
         "registers_flags": render_template(
             "render_registers_flags.html",
             registers=controller.op.super_memory._registers_todict(),
-            flags=controller.op.super_memory.PSW,
+            flags=controller.op.super_memory.PSW.flags(),
             general_purpose_registers=controller.op.super_memory._general_purpose_registers,
         ),
         "memory": render_template("render_memory.html", ram=ram, rom=rom),
@@ -81,7 +81,7 @@ def run():
                 "registers_flags": render_template(
                     "render_registers_flags.html",
                     registers=controller.op.super_memory._registers_todict(),
-                    flags=controller.op.super_memory.PSW,
+                    flags=controller.op.super_memory.PSW.flags(),
                     general_purpose_registers=controller.op.super_memory._general_purpose_registers,
                 ),
                 "memory": render_template("render_memory.html", ram=ram, rom=rom),
@@ -107,7 +107,7 @@ def step():
                 "registers_flags": render_template(
                     "render_registers_flags.html",
                     registers=controller.op.super_memory._registers_todict(),
-                    flags=controller.op.super_memory.PSW,
+                    flags=controller.op.super_memory.PSW.flags(),
                     general_purpose_registers=controller.op.super_memory._general_purpose_registers,
                 ),
                 "memory": render_template("render_memory.html", ram=ram, rom=rom),
@@ -137,7 +137,7 @@ def update_memory():
                 "registers_flags": render_template(
                     "render_registers_flags.html",
                     registers=controller.op.super_memory._registers_todict(),
-                    flags=controller.op.super_memory.PSW,
+                    flags=controller.op.super_memory.PSW.flags(),
                     general_purpose_registers=controller.op.super_memory._general_purpose_registers,
                 ),
                 "memory": render_template("render_memory.html", ram=ram, rom=rom),
@@ -160,5 +160,5 @@ def main():
         rom=rom,
         registers=controller.op.super_memory._registers_todict(),
         general_purpose_registers=controller.op.super_memory._general_purpose_registers,
-        flags=controller.op.super_memory.PSW,
+        flags=controller.op.super_memory.PSW.flags(),
     )

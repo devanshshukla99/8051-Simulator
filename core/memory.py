@@ -238,6 +238,17 @@ class LinkedRegister:
     def bin(self) -> str:
         return self.read().bin()
 
+    def bit_set(self, bit) -> bool:
+        _binary_data = format(self.read(), "08b")
+        print(f"Setting {_binary_data[int(bit)]} = 1")
+        bit = len(_binary_data) - int(bit) - 1
+        _new_binary_data = _binary_data[: int(bit)] + "1" + _binary_data[int(bit) + 1 :]
+        print(f"Setting {_binary_data} -> {_new_binary_data}")
+        _hex_data = format(int(_new_binary_data, 2), "#04x")
+        return self.write(_hex_data)
+
+    pass
+
 
 class DataPointer:
     def __init__(self, memory_ram: dict, addr: list, *args, **kwargs) -> None:
@@ -311,7 +322,7 @@ class ProgramStatusWord:
 
     def __init__(self, memory_ram: dict, addr: str) -> None:
         self._PSW = LinkedRegister(memory_ram, addr)
-        self._flags = {
+        self._placeholder_flags = {
             "P": False,
             "_UD": False,
             "OV": False,
@@ -321,17 +332,25 @@ class ProgramStatusWord:
             "AC": False,
             "CY": False,
         }
+        self._flag_keys = list(self._placeholder_flags.keys())
         pass
 
     def __repr__(self):
         return self.inspect()
 
     def __getitem__(self, key):
-        return self._flags[key]
+        return self.flags()[key]
 
-    def _update_flags(self) -> None:
+    def _update_PSW(self, flags) -> bool:
+        binary_data = "0b" + "".join([str(int(x)) for x in list(flags.values())[::-1]])
+        print(f"flags binary data: {binary_data}")
+        hex_data = format(int(binary_data, 2), "#04x")
+        print(f"flags hex data: {hex_data}")
+        return self._PSW.write(hex_data)
+
+    def flags(self) -> dict:
         binary_data = self._PSW.bin()
-        self._flags = {
+        return {
             "P": bool(int(binary_data[9])),
             "_UD": bool(int(binary_data[8])),
             "OV": bool(int(binary_data[7])),
@@ -341,21 +360,12 @@ class ProgramStatusWord:
             "AC": bool(int(binary_data[3])),
             "CY": bool(int(binary_data[2])),
         }
-        return
-
-    def _update_PSW(self) -> bool:
-        binary_data = "0b" + "".join([str(int(x)) for x in list(self._flags.values())[::-1]])
-        print(f"flags binary data: {binary_data}")
-        hex_data = format(int(binary_data, 2), "#04x")
-        print(f"flags hex data: {hex_data}")
-        return self._PSW.write(hex_data)
 
     def read(self) -> str:
         return self._PSW.read()
 
     def write(self, data: str) -> bool:
         self._PSW.write(data)
-        self._update_flags()
         return True
 
     def inspect(self) -> str:
@@ -376,30 +386,37 @@ class ProgramStatusWord:
         )
 
     def get(self):
-        return self._flags
+        return self.flags()
 
     def items(self):
-        return self._flags.items()
+        return self.flags().items()
 
     def reset(self):
         return self._PSW.write("0x00")
 
     def set_flags(self, flags):
-        self._flags = flags
-        return self._update_PSW()
+        return self._update_PSW(flags)
 
     def _setitem_flag(self, flag, val):
-        self._flags.__setitem__(flag, val)
-        return self._update_PSW()
+        _flags = self.flags()
+        _flags.__setitem__(flag, val)
+        return self._update_PSW(_flags)
 
-    P = property(fget=lambda self: self._flags.get("P"), fset=lambda self, val: self._setitem_flag("P", val))
-    _UD = property(fget=lambda self: self._flags.get("_UD"), fset=lambda self, val: self._setitem_flag("_UD", val))
-    OV = property(fget=lambda self: self._flags.get("OV"), fset=lambda self, val: self._setitem_flag("OV", val))
-    RS0 = property(fget=lambda self: self._flags.get("RS0"), fset=lambda self, val: self._setitem_flag("RS0", val))
-    RS1 = property(fget=lambda self: self._flags.get("RS1"), fset=lambda self, val: self._setitem_flag("RS1", val))
-    F0 = property(fget=lambda self: self._flags.get("F0"), fset=lambda self, val: self._setitem_flag("F0", val))
-    AC = property(fget=lambda self: self._flags.get("AC"), fset=lambda self, val: self._setitem_flag("AC", val))
-    CY = property(fget=lambda self: self._flags.get("CY"), fset=lambda self, val: self._setitem_flag("CY", val))
+    def bit(self, value) -> str:
+        _binary_data = self._PSW.bin()[2:]
+        value = len(_binary_data) - value - 1
+        if value < 0:
+            raise MemoryError("Invalid bit address")
+        return _binary_data[value]
+
+    P = property(fget=lambda self: self.flags().get("P"), fset=lambda self, val: self._setitem_flag("P", val))
+    _UD = property(fget=lambda self: self.flags().get("_UD"), fset=lambda self, val: self._setitem_flag("_UD", val))
+    OV = property(fget=lambda self: self.flags().get("OV"), fset=lambda self, val: self._setitem_flag("OV", val))
+    RS0 = property(fget=lambda self: self.flags().get("RS0"), fset=lambda self, val: self._setitem_flag("RS0", val))
+    RS1 = property(fget=lambda self: self.flags().get("RS1"), fset=lambda self, val: self._setitem_flag("RS1", val))
+    F0 = property(fget=lambda self: self.flags().get("F0"), fset=lambda self, val: self._setitem_flag("F0", val))
+    AC = property(fget=lambda self: self.flags().get("AC"), fset=lambda self, val: self._setitem_flag("AC", val))
+    CY = property(fget=lambda self: self.flags().get("CY"), fset=lambda self, val: self._setitem_flag("CY", val))
     pass
 
 
@@ -412,7 +429,6 @@ class SuperMemory:
         self.B = LinkedRegister(self.memory_ram, "0xF0")
         self.SP = StackPointer(self.memory_ram, "0x07", _bytes=1)
         self.PC = ProgramCounter(self.memory_ram)
-        self.PC.write("0x30")  # RAM general scratch pad area
         self.DPTR = DataPointer(self.memory_ram, ["0x82", "0x83"])
         self.DPL = self.DPTR._DPL
         self.DPH = self.DPTR._DPH
