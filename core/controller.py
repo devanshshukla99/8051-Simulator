@@ -17,6 +17,7 @@ class Controller:
             self.console = Console()
         # operations
         self.op = Operations()
+        self.op.super_memory.PC("0x30")  # RAM general scratch pad area
         # instruction set
         self._jump_flag = False
         self._address_jump_flag = None
