@@ -45,8 +45,6 @@ def ishex(data):
         or bool(re.fullmatch(r"^[0-9a-fA-F]+", data))
     ):
         return True
-    if "." in data:
-        return True
     return False
 
 
