@@ -196,4 +196,14 @@ class Instructions:
                 addr, bit = bit.split(".")
                 return self.op.bit_write(addr, bit)
 
+    def push(self, addr: str) -> bool:
+        """Pushes the content of the memory location to the stack."""
+        data = self.op.memory_read(addr)
+        return self.op.super_memory.SP.write(data)
+
+    def pop(self, addr: str) -> bool:
+        """Pop the stack as the content of the memory location."""
+        data = self.op.super_memory.SP.read()
+        return self.op.memory_write(addr, data)
+
     pass

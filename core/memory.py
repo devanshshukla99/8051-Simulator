@@ -142,65 +142,6 @@ class FProgramCounter:
     pass
 
 
-class StackPointer(Byte):
-    def __init__(self, memory, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
-        self.memory = memory
-
-    def __add__(self, val: int, *args, **kwargs) -> str:
-        """
-        val: `int`
-        """
-        data_int = int(self._data, self._base) + val
-        if data_int > self._memory_limit:
-            data_int -= self._memory_limit
-        elif data_int < 0:
-            data_int += self._memory_limit
-        self._data = format(data_int, self._format_spec)
-        return self._data
-
-    def __sub__(self, val: int, *args, **kwargs) -> str:
-        """
-        val: `int`
-        """
-        data_int = int(self._data, self._base) - val
-        if data_int > self._memory_limit:
-            data_int -= self._memory_limit
-        elif data_int < 0:
-            data_int += self._memory_limit
-        self._data = format(data_int, self._format_spec)
-        return self._data
-
-    def __next__(self):
-        return self.__add__(1)
-
-    def read(self, *args, **kwargs) -> Byte:
-        """
-        POP rp
-        """
-        bin1 = format(int(str(self.memory[self.__add__(1)]), self._base), f"0{8}b")  # single byte
-        bin2 = format(int(str(self.memory[self.__add__(1)]), self._base), f"0{8}b")  # single byte
-        bin_total = "".join(["0b", bin2, bin1])
-        return f'0x{format(int(bin_total, 2), f"0{4}x")}'
-
-    def write(self, data, *args) -> Byte:
-        """
-        PUSH rp
-        rp = BC, DE, HL, or PSW
-        """
-        mem_size = 8
-        binary_data = format(int(str(data), self._base), f"0{self._bytes*8}b")
-        data_1, data_2 = [
-            format(int(binary_data[mem_size * x : mem_size * (x + 1)], 2), f"#0{int(mem_size/2)}x")
-            for x in range(0, int(len(binary_data) / mem_size))
-        ]
-        self.memory.write(self._data, data_1)
-        _ = self.__sub__(1)
-        self.memory.write(self._data, data_2)
-        _ = self.__sub__(1)
-        return True
-
-
 class ProgramCounter(Byte):
     def __init__(self, memory, _bytes=2, *args, **kwargs) -> None:
         super().__init__(_bytes=_bytes, *args, **kwargs)
@@ -417,7 +358,60 @@ class ProgramStatusWord:
     F0 = property(fget=lambda self: self.flags().get("F0"), fset=lambda self, val: self._setitem_flag("F0", val))
     AC = property(fget=lambda self: self.flags().get("AC"), fset=lambda self, val: self._setitem_flag("AC", val))
     CY = property(fget=lambda self: self.flags().get("CY"), fset=lambda self, val: self._setitem_flag("CY", val))
+
     pass
+
+
+class StackPointer:
+    def __init__(self, memory, addr, _bytes=1, *args, **kwargs) -> None:
+        self.memory = memory
+        self._SP = LinkedRegister(memory, addr)
+        self._memory_limit = 256
+        self._base = 16
+        self._bytes = _bytes
+        self._format_spec = f"#0{2 + _bytes * 2}x"
+        self._format_spec_bin = f"#0{2 + _bytes * 4}b"
+
+    def __repr__(self) -> str:
+        return str(self._SP)
+
+    def __add__(self, val: int, *args, **kwargs) -> str:
+        """
+        val: `int`
+        """
+        data_int = int(str(self._SP), self._base) + val
+        if data_int >= self._memory_limit:
+            data_int -= self._memory_limit
+        elif data_int < 0:
+            data_int += self._memory_limit
+        self._SP.write(format(data_int, self._format_spec))
+        return self._SP
+
+    def __sub__(self, val: int, *args, **kwargs) -> str:
+        """
+        val: `int`
+        """
+        data_int = int(str(self._SP), self._base) - val
+        if data_int > self._memory_limit:
+            data_int -= self._memory_limit
+        elif data_int < 0:
+            data_int += self._memory_limit
+        self._SP.write(format(data_int, self._format_spec))
+        return self._SP
+
+    def __next__(self):
+        return self.__add__(1)
+
+    def read(self, *args, **kwargs) -> Byte:
+        """POP rp"""
+        data = self.memory.read(self._SP)
+        self.__sub__(1)
+        return data
+
+    def write(self, data, *args) -> Byte:
+        """PUSH DIRECT"""
+        self.__next__()
+        return self.memory.write(self._SP, data)
 
 
 class SuperMemory:
@@ -427,7 +421,7 @@ class SuperMemory:
 
         self.A = LinkedRegister(self.memory_ram, "0xE0")
         self.B = LinkedRegister(self.memory_ram, "0xF0")
-        self.SP = StackPointer(self.memory_ram, "0x07", _bytes=1)
+        self.SP = StackPointer(self.memory_ram, "0x81", _bytes=1)
         self.PC = ProgramCounter(self.memory_ram)
         self.DPTR = DataPointer(self.memory_ram, ["0x82", "0x83"])
         self.DPL = self.DPTR._DPL

@@ -28,8 +28,9 @@ def tohex(data):
     if match:
         return data.lower()
     match = re.fullmatch(r"^[0-9a-fA-F]+[h|H]$", data)
-    if not match:
-        raise ValueError(f"Required hex of the form `0x` or `H` found {data}")
+    if match:
+        return f"0x{match.group().lower()[:-1]}"
+        # raise ValueError(f"Required hex of the form `0x` or `H` found {data}")
     match = re.match(r"^[0-9a-fA-F]+", data)
     return f"0x{match.group().lower()}"
 
@@ -38,10 +39,15 @@ def ishex(data):
     """
     Helper method to check if the value is hex or not
     """
-    if bool(re.fullmatch(r"^0[x|X][0-9a-fA-F]+", data)) or bool(re.fullmatch(r"^[0-9a-fA-F]+[h|H]$", data)):
-        if "." in data:
-            return True
-        return False
+    if (
+        bool(re.fullmatch(r"^0[x|X][0-9a-fA-F]+", data))
+        or bool(re.fullmatch(r"^[0-9a-fA-F]+[h|H]$", data))
+        or bool(re.fullmatch(r"^[0-9a-fA-F]+", data))
+    ):
+        return True
+    if "." in data:
+        return True
+    return False
 
 
 def sanatize_hex(data):
