@@ -89,10 +89,14 @@ class Operations:
                     x = x[1:]
                     print("#immed")
                     _args_params.append("#IMMED")
+                    _args_hexs.append(decompose_byte(tohex(x)))
+                elif "." in x:
+                    print("bit")
+                    _args_params.append("BIT")
                 else:
                     print("direct")
                     _args_params.append("DIRECT")
-                _args_hexs.append(decompose_byte(tohex(x)))
+                    _args_hexs.append(decompose_byte(tohex(x)))
 
         print(_args_params)
         print(_args_hexs)
@@ -140,6 +144,13 @@ class Operations:
         if RAM:
             return self.memory_ram.write(addr, data)
         return self.memory_rom.write(addr, data)
+
+    def bit_write(self, addr: str, bit: str) -> bool:
+        _parsed_addr = self._parse_addr(addr)
+        if _parsed_addr:
+            print(addr, _parsed_addr)
+            return _parsed_addr.bit_set(bit)
+        return False
 
     def register_pair_read(self, addr) -> Byte:
         print(f"register pair read {addr}")

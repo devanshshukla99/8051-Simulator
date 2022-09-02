@@ -187,4 +187,13 @@ class Instructions:
         """Database directive origin"""
         return self.op.super_memory.PC(addr)
 
+    def setb(self, bit: str) -> bool:
+        """Set a bit to true"""
+        if bit == "C":
+            return self.flags._setitem_flag("CY", True)
+        else:
+            if "." in bit:
+                addr, bit = bit.split(".")
+                return self.op.bit_write(addr, bit)
+
     pass
