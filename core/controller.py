@@ -124,8 +124,9 @@ class Controller:
 
     def _addjob(self, opcode: str, func, args: tuple = (), kwargs: dict = {}) -> bool:
         for idx, val in enumerate(args):
-            if ishex(val):
-                args[idx] = tohex(val)
+            if not self.op.iskeyword(val):
+                if ishex(val):
+                    args[idx] = tohex(val)
         self._callstack.append((opcode, func, args, kwargs))
         return True
 

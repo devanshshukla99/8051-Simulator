@@ -363,9 +363,10 @@ class ProgramStatusWord:
 
 
 class StackPointer:
-    def __init__(self, memory, addr, _bytes=1, *args, **kwargs) -> None:
+    def __init__(self, memory, addr, _bytes=1, _default="0x07", *args, **kwargs) -> None:
         self.memory = memory
         self._SP = LinkedRegister(memory, addr)
+        self._SP.write(_default)
         self._memory_limit = 256
         self._base = 16
         self._bytes = _bytes
@@ -422,7 +423,7 @@ class SuperMemory:
         self.A = LinkedRegister(self.memory_ram, "0xE0")
         self.B = LinkedRegister(self.memory_ram, "0xF0")
         self.SP = StackPointer(self.memory_ram, "0x81", _bytes=1)
-        self.PC = ProgramCounter(self.memory_ram)
+        self.PC = ProgramCounter(self.memory_rom)
         self.DPTR = DataPointer(self.memory_ram, ["0x82", "0x83"])
         self.DPL = self.DPTR._DPL
         self.DPH = self.DPTR._DPH
