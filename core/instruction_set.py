@@ -189,12 +189,16 @@ class Instructions:
 
     def setb(self, bit: str) -> bool:
         """Set a bit to true"""
-        if bit == "C":
-            return self.flags._setitem_flag("CY", True)
-        else:
-            if "." in bit:
-                addr, bit = bit.split(".")
-                return self.op.bit_write(addr, bit)
+        return self.op.bit_write(bit, True)
+
+    def clr(self, bit: str) -> bool:
+        """Clears a bit"""
+        return self.op.bit_write(bit, False)
+
+    def cpl(self, bit: str) -> bool:
+        """Complements a bit"""
+        _data = self.op.bit_read(bit)
+        return self.op.bit_write(bit, not _data)
 
     def push(self, addr: str) -> bool:
         """Pushes the content of the memory location to the stack."""

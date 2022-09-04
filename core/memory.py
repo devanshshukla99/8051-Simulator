@@ -179,11 +179,19 @@ class LinkedRegister:
     def bin(self) -> str:
         return self.read().bin()
 
-    def bit_set(self, bit) -> bool:
+    def bit_get(self, bit: str) -> bool:
         _binary_data = format(self.read(), "08b")
-        print(f"Setting {_binary_data[int(bit)]} = 1")
         bit = len(_binary_data) - int(bit) - 1
-        _new_binary_data = _binary_data[: int(bit)] + "1" + _binary_data[int(bit) + 1 :]
+        _data = bool(int(_binary_data[int(bit)]))
+        print(f"Getting {_binary_data[int(bit)]} / {_data} from {_binary_data}")
+        return _data
+
+    def bit_set(self, bit: str, val: str) -> bool:
+        val = str(int(val))
+        _binary_data = format(self.read(), "08b")
+        bit = len(_binary_data) - int(bit) - 1
+        print(f"Setting {_binary_data[int(bit)]} -> {val}")
+        _new_binary_data = _binary_data[: int(bit)] + val + _binary_data[int(bit) + 1 :]
         print(f"Setting {_binary_data} -> {_new_binary_data}")
         _hex_data = format(int(_new_binary_data, 2), "#04x")
         return self.write(_hex_data)
@@ -326,8 +334,8 @@ class ProgramStatusWord:
             """
         )
 
-    def get(self):
-        return self.flags()
+    def get(self, _flag):
+        return self.flags()[_flag]
 
     def items(self):
         return self.flags().items()
@@ -340,7 +348,7 @@ class ProgramStatusWord:
 
     def _setitem_flag(self, flag, val):
         _flags = self.flags()
-        _flags.__setitem__(flag, val)
+        _flags.__setitem__(flag, bool(val))
         return self._update_PSW(_flags)
 
     def bit(self, value) -> str:
@@ -429,9 +437,16 @@ class SuperMemory:
         self.DPH = self.DPTR._DPH
         self.PSW = ProgramStatusWord(self.memory_ram, "0x0D0")
         self._define_general_purpose_registers()
+        self._define_flag_bits()
 
     def __repr__(self) -> str:
         return "<SuperMemory>"
+
+    def _define_flag_bits(self):
+        """Method to define the `C` bit for the `CY` flag."""
+        # Define `C` carry flag
+        setattr(self.C.__func__, "bit_get", lambda *args: self.PSW.get("CY"))
+        setattr(self.C.__func__, "bit_set", lambda val, *args: self.PSW._setitem_flag("CY", val))
 
     def _define_general_purpose_registers(self):
         self._general_purpose_registers = {
@@ -579,7 +594,7 @@ class SuperMemory:
             B \t= {self.B}
             SP \t= {self.SP}
             PC \t= {self.PC}
-            DPTR \t= {self.DPTR},
+            DPTR \t= {self.DPTR}
 
             Registers Bank
             --------------
@@ -634,6 +649,9 @@ class SuperMemory:
         pass
 
     def R7(self):
+        pass
+
+    def C(self):
         pass
 
     def inspect(self):

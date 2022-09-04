@@ -19,6 +19,7 @@ class Operations:
             "A": self.super_memory.A,  # Accumulator
             "PSW": self.flags._PSW,  # Program Status Word
             "B": self.super_memory.B,  # Register B
+            "C": self.super_memory.C,
             "SP": self.super_memory.SP,  # Stack Pointer
             "PC": self.super_memory.PC,  # Program Counter
             "DPL": self.super_memory.DPTR,  # Data pointer low
@@ -145,11 +146,28 @@ class Operations:
             return self.memory_ram.write(addr, data)
         return self.memory_rom.write(addr, data)
 
-    def bit_write(self, addr: str, bit: str) -> bool:
+    def bit_read(self, addr: str) -> bool:
+        bit = None
+        if "." in addr:
+            addr, bit = addr.split(".")
         _parsed_addr = self._parse_addr(addr)
         if _parsed_addr:
             print(addr, _parsed_addr)
-            return _parsed_addr.bit_set(bit)
+            if bit:
+                return _parsed_addr.bit_get(bit)
+            return _parsed_addr.bit_get()
+        return False
+
+    def bit_write(self, addr: str, val: str) -> bool:
+        bit = None
+        if "." in addr:
+            addr, bit = addr.split(".")
+        _parsed_addr = self._parse_addr(addr)
+        if _parsed_addr:
+            print(addr, _parsed_addr)
+            if bit:
+                return _parsed_addr.bit_set(bit, val)
+            return _parsed_addr.bit_set(val)
         return False
 
     def register_pair_read(self, addr) -> Byte:
