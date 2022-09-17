@@ -17,6 +17,7 @@ class Operations:
         self.super_memory.PC("0x0000")
         self._registers_list = {
             "A": self.super_memory.A,  # Accumulator
+            "ACC": self.super_memory.A,  # Accumulator
             "PSW": self.flags._PSW,  # Program Status Word
             "B": self.super_memory.B,  # Register B
             "C": self.super_memory.C,

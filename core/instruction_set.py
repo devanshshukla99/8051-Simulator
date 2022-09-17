@@ -119,7 +119,6 @@ class Instructions:
         return self.op.memory_write(addr, result_hex)
 
     def anl(self, addr_1, addr_2) -> bool:
-        raise AssertionError
         addr_1, _ = self._resolve_addressing_mode(addr_1)
         addr_2, _ = self._resolve_addressing_mode(addr_2)
 
@@ -130,7 +129,6 @@ class Instructions:
         return self._check_flags(format(int(result, self._base), "08b"))
 
     def orl(self, addr_1, addr_2) -> bool:
-        raise AssertionError
         addr_1, _ = self._resolve_addressing_mode(addr_1)
         addr_2, _ = self._resolve_addressing_mode(addr_2)
 
@@ -182,6 +180,13 @@ class Instructions:
         rolled_data_bin = "".join(rolled_data_bin)
         data_new = format(int(rolled_data_bin, 2), "#02x")
         return self.op.memory_write("A", data_new)
+
+    def da(self, addr: str) -> bool:
+        """Converts the hex data into its BCD equivalent."""
+        addr, _ = self._resolve_addressing_mode(addr)
+        data = self.op.memory_read(addr)
+        data_decimal = int(str(data), 16)
+        return self.op.memory_write(addr, f"0x{data_decimal}")
 
     def org(self, addr) -> bool:
         """Database directive origin"""
