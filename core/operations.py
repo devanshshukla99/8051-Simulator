@@ -141,6 +141,8 @@ class Operations:
         print(f"memory write {addr}|{data}")
         _parsed_addr = self._parse_addr(addr)
         if _parsed_addr:
+            if addr == "SP":
+                return _parsed_addr._SP.write(data)
             return _parsed_addr.write(data, addr)
         if RAM:
             return self.memory_ram.write(addr, data)

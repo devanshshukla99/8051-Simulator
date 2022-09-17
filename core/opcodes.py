@@ -256,4 +256,16 @@ opcodes_lookup = {
     "MOV R6 A": "0xFE",
     "MOV R7 A": "0xFF",
     "ORG DIRECT": "0xFFFFFFDB",
+    # custome intructions; now sure about anyother way
+    "PUSH A": "0xC0",
+    "PUSH B": "0xC0",
+    "PUSH R0": "0xC0",
+    "PUSH R1": "0xC0",
+    "PUSH R2": "0xC0",
+    "PUSH R3": "0xC0",
+    "PUSH R4": "0xC0",
+    "PUSH R5": "0xC0",
+    "PUSH R6": "0xC0",
+    "PUSH R7": "0xC0",
+    "MOV SP #IMMED": "0x75",
 }
