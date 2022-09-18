@@ -86,7 +86,7 @@ class Operations:
                 else:
                     _args_params.append(x)
             else:
-                print("not a key word")
+                print(f"`{x}` not a key word")
                 if x[0] == "#":  # immediate
                     x = x[1:]
                     print("#immed")
@@ -107,10 +107,10 @@ class Operations:
         _opcode_hex = self._lookup_opcodes_dir.get(_opcode_search_params)
         self.console.log(f"OPCODE: {_opcode_search_params} = {_opcode_hex}")
         if _opcode_hex:
-            if _opcode_hex == "0xFFFFFFDB":
+            if _opcode_hex == "0xFFFFFFDB":  # trick to accomodate database directives
                 _opcode_hex = None
             return _opcode_hex, _args_hexs
-        raise OPCODENotFound
+        raise OPCODENotFound(" ".join([opcode, *args]))
 
     def prepare_operation(self, command: str, opcode: str, *args, **kwargs) -> bool:
         _opcode_hex, _args_hex = self._opcode_fetch(opcode, *args)

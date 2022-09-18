@@ -116,7 +116,7 @@ class Controller:
         func = self.lookup.get(opcode)
         if func:
             return func
-        raise OPCODENotFound
+        raise OPCODENotFound(opcode)
 
     @property
     def callstack(self) -> list:

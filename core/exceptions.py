@@ -4,8 +4,9 @@ class SyntaxError(Exception):
 
 
 class OPCODENotFound(Exception):
-    def __init__(self, msg="invalid opcode") -> None:
-        super().__init__(msg)
+    def __init__(self, opcode, msg="is an invalid opcode") -> None:
+        exception_msg = f"`{opcode}` {msg}"
+        super().__init__(exception_msg)
 
 
 class MemoryLimitExceeded(Exception):

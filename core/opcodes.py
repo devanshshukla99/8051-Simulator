@@ -255,7 +255,7 @@ opcodes_lookup = {
     "MOV R5 A": "0xFD",
     "MOV R6 A": "0xFE",
     "MOV R7 A": "0xFF",
-    "ORG DIRECT": "0xFFFFFFDB",
+    "ORG DIRECT": "0xFFFFFFDB",  # Database directive trick
     # custome intructions; now sure about anyother way
     "PUSH A": "0xC0",
     "PUSH B": "0xC0",
