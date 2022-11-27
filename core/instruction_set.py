@@ -5,7 +5,7 @@ class Instructions:
     def __init__(self, op) -> None:
         self.op = op
         self._jump_flag = False
-        self._jump_instructions = []  # Add later
+        self._jump_instructions = op._jump_instructions
         self._base = 16
         self.flags = self.op.super_memory.PSW
         pass
@@ -214,5 +214,83 @@ class Instructions:
         """Pop the stack as the content of the memory location."""
         data = self.op.super_memory.SP.read()
         return self.op.memory_write(addr, data)
+
+    def jz(self, label, *args, **kwargs) -> bool:
+        """Jump if accumulator is zero"""
+        bounce_to_label = kwargs.get("bounce_to_label")
+        print(self.op.memory_read("A"))
+        if int(self.op.memory_read("A")) == 0:
+            return bounce_to_label(label)
+        return True
+
+    def jnz(self, label, *args, **kwargs) -> bool:
+        """Jump if accumulator is not zero"""
+        bounce_to_label = kwargs.get("bounce_to_label")
+        print(self.op.memory_read("A"))
+        if int(self.op.memory_read("A")) != 0:
+            return bounce_to_label(label)
+        return True
+
+    def jc(self, label, *args, **kwargs) -> bool:
+        """Jump if carry"""
+        bounce_to_label = kwargs.get("bounce_to_label")
+        print(self.op.flags.CY)
+        if self.op.flags.CY:
+            return bounce_to_label(label)
+        return True
+
+    def jnc(self, label, *args, **kwargs) -> bool:
+        """Jump if no carry"""
+        bounce_to_label = kwargs.get("bounce_to_label")
+        print(self.op.flags.CY)
+        if not self.op.flags.CY:
+            return bounce_to_label(label)
+        return True
+
+    def djnz(self, addr, label, *args, **kwargs) -> bool:
+        """Jump if accumulator is not zero"""
+        bounce_to_label = kwargs.get("bounce_to_label")
+        if label == "offset":
+            label = addr
+            addr = "A"
+        data = self.op.memory_read(addr)
+
+        result = int(str(data), 16) - 1
+        self.op.memory_write(addr, hex(result))
+        if int(self.op.memory_read(addr)) != 0:
+            return bounce_to_label(label)
+        return True
+
+    def cjne(self, addr, addr2, label, *args, **kwargs) -> bool:
+        """Compare and jump if not equal"""
+        bounce_to_label = kwargs.get("bounce_to_label")
+        data_1 = self.op.memory_read(addr)
+        addr2, _ = self._resolve_addressing_mode(addr2)
+        data_2 = self.op.memory_read(addr2)
+        if int(data_1) != int(data_2):
+            if int(data_1) < int(data_2):
+                self.flags.CY = True
+            # Jump if not equal
+            return bounce_to_label(label)
+        self.flags.CY = False
+        return True
+
+    def jb(self, addr, label, *args, **kwargs) -> bool:
+        """Jump if bit is true"""
+        raise NotImplemented
+        bounce_to_label = kwargs.get("bounce_to_label")
+        data = self.op.memory_read(addr)
+        if data:
+            return bounce_to_label(label)
+        return True
+
+    def jnb(self, addr, label, *args, **kwargs) -> bool:
+        """Jump if bit is false"""
+        raise NotImplemented
+        bounce_to_label = kwargs.get("bounce_to_label")
+        data = self.op.memory_read(addr)
+        if data:
+            return bounce_to_label(label)
+        return True
 
     pass
