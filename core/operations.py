@@ -43,6 +43,23 @@ class Operations:
         self._generate_keywords()
         self._assembler = {}
         self._internal_PC = []
+
+        # Jump instructions
+        self._jump_instructions = [
+            "SJMP",
+            "AJMP",
+            "LJMP",
+            "JMP",
+            "JC",
+            "JNC",
+            "JB",
+            "JNB",
+            "JBC",
+            "JZ",
+            "JNZ",
+            "DJNZ",
+            "CJNE",
+        ]  # Add later
         pass
 
     def _generate_keywords(self):
@@ -83,6 +100,10 @@ class Operations:
                 if x[0] == "@":
                     print("Register indirect")
                     _args_params.append(x)
+                elif x == "B":
+                    print("B")
+                    _args_params.append("DIRECT")
+                    _args_hexs.append(["0xF0"])  # memory location for `B`
                 else:
                     _args_params.append(x)
             else:
@@ -98,7 +119,8 @@ class Operations:
                 else:
                     print("direct")
                     _args_params.append("DIRECT")
-                    _args_hexs.append(decompose_byte(tohex(x)))
+                    if opcode not in self._jump_instructions:
+                        _args_hexs.append(decompose_byte(tohex(x)))
 
         print(_args_params)
         print(_args_hexs)

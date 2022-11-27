@@ -17,7 +17,7 @@ class Controller:
             self.console = Console()
         # operations
         self.op = Operations()
-        self.op.super_memory.PC("0x30")  # RAM general scratch pad area
+        # self.op.super_memory.PC("0x30")  # RAM general scratch pad area
         # instruction set
         self._jump_flag = False
         self._address_jump_flag = None
@@ -30,7 +30,7 @@ class Controller:
         # callstack
         self._callstack = []
         self.ready = False
-        self._jump_methods = []
+        self._jump_methods = self.op._jump_instructions
         self._wrap_bounceable_methods()
         self._run_idx = 0
         return
@@ -62,7 +62,7 @@ class Controller:
 
     def _bounce_to_label(self, label):
         idx, _ = self._locate_jump_label(label)
-        print(f"JUMPING to {idx}")
+        print(f"JUMPING to label: {label} index: {idx}")
         self._run_idx = idx
         return True
 
@@ -103,7 +103,7 @@ class Controller:
                 _data_to_write = decompose_byte(str(_jump_label._counter))
                 self.op.memory_write(str(_target_label._counter + 1), _data_to_write[1])
                 self.op.memory_write(str(_target_label._counter + 2), _data_to_write[0])
-                _assembler = self.op._assembler[_target_label._command].replace("0xff", "").strip()
+                _assembler = self.op._assembler[_target_label._command].replace("oxff", "").strip()
                 self.op._assembler[_target_label._command] = " ".join(
                     [_assembler, _data_to_write[1], _data_to_write[0]]
                 )
@@ -155,9 +155,12 @@ class Controller:
         opcode, args, kwargs = self._parser(command)
         self.console.log(f"opcode: {opcode}; args: {args}; kwargs: {kwargs}")
         if self.instruct_set._is_jump_opcode(opcode):
+            print("JUMP instruction")
             # if JNZ | JC | etc ** kwargs the target-label **
-            kwargs["target-label"] = JumpFlag(args[0], self.op.super_memory.PC, command)
-            args.extend(["0xff", "0xff"])  # placeholder
+            kwargs["target-label"] = JumpFlag(args[0], self.op.super_memory.PC + len(self.op._internal_PC), command)
+            args.append("offset")  # placeholder
+            # kwargs["label"] = _label
+            # args.append("offset")  # placeholder
         opcode_func = self._lookup_opcode_func(opcode)
         self._addjob(opcode, opcode_func, args, kwargs)
         self.op.prepare_operation(command, opcode, *args)
@@ -169,12 +172,11 @@ class Controller:
 
         The function should execute at both commands; if `target-label` or `label` then look for
         `target-label` and `label`;
-        if `target-lable` is found then replace the placeholder obtained using the `PC` in `label`
+        if `target-tabel` is found then replace the placeholder obtained using the `PC` in `label`
         """
         _label = kwargs.get("target-label", kwargs.get("label", None))
         if _label:
             self._target_label(_label)
-
         self.ready = True
         return True
 
