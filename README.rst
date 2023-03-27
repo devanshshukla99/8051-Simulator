@@ -6,7 +6,7 @@
 
 A WIP project for python based 8051 microprocessor simulator
 
-Deployed at `8051 Simulator <https://sim-8051.herokuapp.com/>`_
+Deployed at `8051 Simulator <https://sim8051.pythonanywhere.com/>`_
 
 .. |build| image:: https://github.com/devanshshukla99/8051-Simulator/actions/workflows/build.yml/badge.svg
     :target: https://github.com/devanshshukla99/8051-Simulator/actions/workflows/build.yml
