@@ -4,9 +4,12 @@
 
 |build| |license|
 
-A WIP project for python based 8051 microprocessor simulator
+A project for python based 8051 microprocessor simulator
 
 Deployed at `8051 Simulator <https://sim8051.pythonanywhere.com/>`_
+
+.. image:: _static/interface.png
+    :alt: Webapp interface
 
 .. |build| image:: https://github.com/devanshshukla99/8051-Simulator/actions/workflows/build.yml/badge.svg
     :target: https://github.com/devanshshukla99/8051-Simulator/actions/workflows/build.yml
