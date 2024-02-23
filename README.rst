@@ -11,6 +11,41 @@ Deployed at `8051 Simulator <https://sim8051.pythonanywhere.com/>`_
 .. image:: _static/interface.png
     :alt: Webapp interface
 
+---------------------------------------
+
+Usable opcodes
+--------------
+
+The following opcodes are usable presently:
+
+- ADD
+- ANL
+- CJNE
+- CLR
+- CPL
+- DA
+- DEC
+- DJNZ
+- INC
+- JC
+- JNC
+- JNZ
+- JZ
+- MOV
+- ORG
+- ORL
+- POP
+- PUSH
+- RL
+- RR
+- SETB
+- SUBB
+- SJMP
+- AJMP
+- LJMP
+- JMP
+- JBC
+
 .. |build| image:: https://github.com/devanshshukla99/8051-Simulator/actions/workflows/build.yml/badge.svg
     :target: https://github.com/devanshshukla99/8051-Simulator/actions/workflows/build.yml
     :alt: build
